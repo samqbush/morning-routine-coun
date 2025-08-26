@@ -58,6 +58,77 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const setDebugTimeToStep = (stepIndex: number) => {
+    if (stepIndex === -1) {
+      // Set to 10 PM (waiting for tomorrow)
+      const newTime = new Date();
+      newTime.setHours(22, 0, 0, 0);
+      setDebugTime(newTime);
+    } else if (stepIndex === -2) {
+      // Set to 6:30 AM (before routine starts)
+      const newTime = new Date();
+      newTime.setHours(6, 30, 0, 0);
+      setDebugTime(newTime);
+    } else if (stepIndex >= MORNING_ROUTINE.length) {
+      // Set to after routine is done (7:30 AM)
+      const newTime = new Date();
+      newTime.setHours(7, 30, 0, 0);
+      setDebugTime(newTime);
+    } else {
+      // Set to 2 minutes before the step
+      const stepTime = MORNING_ROUTINE[stepIndex].timeInMinutes - 2;
+      const newTime = new Date();
+      newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
+      setDebugTime(newTime);
+    }
+  };
+
+  // Debug controls component
+  const DebugControls = () => (
+    <Card className="p-6 border-2 border-destructive">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Bug size={24} className="text-destructive" />
+          <h3 className="text-xl font-bold text-destructive">Debug Mode - Test Different Times</h3>
+        </div>
+        
+        <div className="text-sm text-muted-foreground">
+          Current debug time: {(isDebugMode ? debugTime : currentTime).toLocaleTimeString()}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
+            Before Start (6:30)
+          </Button>
+          {MORNING_ROUTINE.map((step, index) => (
+            <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
+              {step.time} - {step.activity.split(' ')[0]}
+            </Button>
+          ))}
+          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(MORNING_ROUTINE.length)}>
+            Finished (7:30)
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
+            Evening (10:00 PM)
+          </Button>
+        </div>
+
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={() => {
+              setIsDebugMode(false);
+              setDebugTime(new Date());
+            }}
+          >
+            Exit Debug Mode
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+
   const getCurrentTimeInMinutes = () => {
     const timeToUse = isDebugMode ? debugTime : currentTime;
     return timeToUse.getHours() * 60 + timeToUse.getMinutes();
@@ -225,76 +296,7 @@ function App() {
   const currentActivity = MORNING_ROUTINE[currentStep];
   const nextActivity = currentStep + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[currentStep + 1] : null;
 
-  const setDebugTimeToStep = (stepIndex: number) => {
-    if (stepIndex === -1) {
-      // Set to 10 PM (waiting for tomorrow)
-      const newTime = new Date();
-      newTime.setHours(22, 0, 0, 0);
-      setDebugTime(newTime);
-    } else if (stepIndex === -2) {
-      // Set to 6:30 AM (before routine starts)
-      const newTime = new Date();
-      newTime.setHours(6, 30, 0, 0);
-      setDebugTime(newTime);
-    } else if (stepIndex >= MORNING_ROUTINE.length) {
-      // Set to after routine is done (7:30 AM)
-      const newTime = new Date();
-      newTime.setHours(7, 30, 0, 0);
-      setDebugTime(newTime);
-    } else {
-      // Set to 2 minutes before the step
-      const stepTime = MORNING_ROUTINE[stepIndex].timeInMinutes - 2;
-      const newTime = new Date();
-      newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
-      setDebugTime(newTime);
-    }
-  };
 
-  // Debug controls - only show in debug mode
-  const DebugControls = () => (
-    <Card className="p-6 border-2 border-destructive">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Bug size={24} className="text-destructive" />
-          <h3 className="text-xl font-bold text-destructive">Debug Mode - Test Different Times</h3>
-        </div>
-        
-        <div className="text-sm text-muted-foreground">
-          Current debug time: {(isDebugMode ? debugTime : currentTime).toLocaleTimeString()}
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
-            Before Start (6:30)
-          </Button>
-          {MORNING_ROUTINE.map((step, index) => (
-            <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
-              {step.time} - {step.activity.split(' ')[0]}
-            </Button>
-          ))}
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(MORNING_ROUTINE.length)}>
-            Finished (7:30)
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
-            Evening (10:00 PM)
-          </Button>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant="secondary" 
-            onClick={() => {
-              setIsDebugMode(false);
-              setDebugTime(new Date());
-            }}
-          >
-            Exit Debug Mode
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
