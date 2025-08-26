@@ -77,7 +77,7 @@ function App() {
 
   const getTimeUntilNextStep = () => {
     const currentStep = getCurrentStep();
-    if (currentStep >= MORNING_ROUTINE.length) return 0;
+    if (currentStep >= MORNING_ROUTINE.length || currentStep < 0) return 0;
     
     const timeInMinutes = getCurrentTimeInMinutes();
     const nextStepTime = MORNING_ROUTINE[currentStep].timeInMinutes;
@@ -93,6 +93,7 @@ function App() {
 
   const getProgressPercentage = () => {
     const currentStep = getCurrentStep();
+    if (currentStep < 0) return 0;
     const totalSteps = MORNING_ROUTINE.length;
     return (currentStep / totalSteps) * 100;
   };
