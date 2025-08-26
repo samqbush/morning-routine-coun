@@ -102,7 +102,7 @@ function App() {
           </Button>
           {MORNING_ROUTINE.map((step, index) => (
             <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
-              {step.time} - {step.description.split(' ')[0]} {step.description.split(' ')[1]}
+              {step.time} - {step.activity}
             </Button>
           ))}
           <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(MORNING_ROUTINE.length)}>
@@ -143,7 +143,7 @@ function App() {
     }
     
     for (let i = 0; i < MORNING_ROUTINE.length; i++) {
-      if (timeInMinutes < MORNING_ROUTINE[i].timeInMinutes) {
+      if (timeInMinutes <= MORNING_ROUTINE[i].timeInMinutes) {
         return i;
       }
     }
