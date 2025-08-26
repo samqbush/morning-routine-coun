@@ -75,8 +75,8 @@ function App() {
       newTime.setHours(7, 30, 0, 0);
       setDebugTime(newTime);
     } else {
-      // Set to 2 minutes before the step
-      const stepTime = MORNING_ROUTINE[stepIndex].timeInMinutes - 2;
+      // Set to the exact step time
+      const stepTime = MORNING_ROUTINE[stepIndex].timeInMinutes;
       const newTime = new Date();
       newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
       setDebugTime(newTime);
