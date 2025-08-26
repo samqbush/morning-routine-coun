@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle, ArrowRight, RotateCcw } from '@phosphor-icons/react';
+import { Clock, CheckCircle, ArrowRight } from '@phosphor-icons/react';
 
 interface RoutineStep {
   time: string;
@@ -47,8 +46,6 @@ const MORNING_ROUTINE: RoutineStep[] = [
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [manualStart, setManualStart] = useState(false);
-  const [startTime, setStartTime] = useState<Date | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,12 +56,16 @@ function App() {
   }, []);
 
   const getCurrentTimeInMinutes = () => {
-    const time = manualStart && startTime ? startTime : currentTime;
-    return time.getHours() * 60 + time.getMinutes();
+    return currentTime.getHours() * 60 + currentTime.getMinutes();
   };
 
   const getCurrentStep = () => {
     const timeInMinutes = getCurrentTimeInMinutes();
+    
+    // If it's late in the day (after 8 AM), automatically reset for next day
+    if (timeInMinutes > 8 * 60) {
+      return -1; // Special case for "waiting for tomorrow"
+    }
     
     for (let i = 0; i < MORNING_ROUTINE.length; i++) {
       if (timeInMinutes < MORNING_ROUTINE[i].timeInMinutes) {
@@ -96,22 +97,32 @@ function App() {
     return (currentStep / totalSteps) * 100;
   };
 
-  const handleManualStart = () => {
-    setManualStart(true);
-    setStartTime(new Date(new Date().setHours(6, 45, 0, 0)));
-  };
-
-  const handleReset = () => {
-    setManualStart(false);
-    setStartTime(null);
-  };
-
   const currentStep = getCurrentStep();
   const timeRemaining = getTimeUntilNextStep();
   const progressPercentage = getProgressPercentage();
 
-  // Early morning case
-  if (getCurrentTimeInMinutes() < MORNING_ROUTINE[0].timeInMinutes && !manualStart) {
+  // Late in day case - show waiting for tomorrow
+  if (currentStep === -1) {
+    const hoursUntilTomorrow = 24 - currentTime.getHours() + 6; // Until 6 AM tomorrow
+    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - currentTime.getMinutes() + 45; // Until 6:45 AM
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+        <Card className="w-full max-w-4xl p-12 text-center">
+          <div className="space-y-8">
+            <h1 className="text-5xl font-black text-primary">See You Tomorrow! 🌙</h1>
+            <p className="text-2xl font-semibold text-muted-foreground">The morning routine will start again at 6:45 AM</p>
+            <div className="text-6xl font-black text-secondary">
+              {Math.floor(minutesUntilTomorrow / 60)}h {minutesUntilTomorrow % 60}m
+            </div>
+            <p className="text-xl text-muted-foreground">until tomorrow's routine</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Early morning case - automatically show waiting screen
+  if (getCurrentTimeInMinutes() < MORNING_ROUTINE[0].timeInMinutes) {
     const timeUntilStart = MORNING_ROUTINE[0].timeInMinutes - getCurrentTimeInMinutes();
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
@@ -123,16 +134,13 @@ function App() {
               {formatTimeRemaining(timeUntilStart)}
             </div>
             <p className="text-2xl text-muted-foreground">until routine begins</p>
-            <Button onClick={handleManualStart} size="lg" className="text-2xl px-12 py-6">
-              Start Now!
-            </Button>
           </div>
         </Card>
       </div>
     );
   }
 
-  // All done case
+  // All done case - automatically reset after 10 minutes
   if (currentStep >= MORNING_ROUTINE.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
@@ -141,10 +149,7 @@ function App() {
             <CheckCircle size={120} className="text-accent mx-auto" />
             <h1 className="text-6xl font-black text-accent">Great Job! 🎉</h1>
             <p className="text-3xl font-semibold text-muted-foreground">Have a wonderful day at school!</p>
-            <Button onClick={handleReset} size="lg" className="text-2xl px-12 py-6">
-              <RotateCcw size={32} className="mr-4" />
-              Start Over
-            </Button>
+            <p className="text-xl text-muted-foreground">This screen will automatically reset for tomorrow</p>
           </div>
         </Card>
       </div>
@@ -218,19 +223,6 @@ function App() {
             </div>
           </Card>
         )}
-
-        {/* Manual Controls */}
-        <div className="flex justify-center gap-4">
-          <Button onClick={handleReset} variant="outline" size="lg" className="text-xl px-8 py-4">
-            <RotateCcw size={24} className="mr-2" />
-            Reset Routine
-          </Button>
-          {!manualStart && (
-            <Button onClick={handleManualStart} size="lg" className="text-xl px-8 py-4">
-              Start Manual Timer
-            </Button>
-          )}
-        </div>
 
       </div>
     </div>
