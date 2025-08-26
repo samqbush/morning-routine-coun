@@ -102,7 +102,7 @@ function App() {
           </Button>
           {MORNING_ROUTINE.map((step, index) => (
             <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
-              {step.time} - {step.activity.split(' ')[0]}
+              {step.time} - {step.description.split(' ')[0]} {step.description.split(' ')[1]}
             </Button>
           ))}
           <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(MORNING_ROUTINE.length)}>
