@@ -154,31 +154,63 @@ function App() {
       return -1; // Special case for "waiting for tomorrow"
     }
     
-    // Find which step we should be on - if we've reached a step time, we're on that step
-    for (let i = 0; i < MORNING_ROUTINE.length; i++) {
-      if (timeInMinutes < MORNING_ROUTINE[i].timeInMinutes) {
-        return i; // We haven't reached this step yet
+    // Find which step we're currently in
+    // If we haven't reached the first step, return -2 (waiting to start)
+    if (timeInMinutes < MORNING_ROUTINE[0].timeInMinutes) {
+      return -2;
+    }
+    
+    // Find the current active step - the last step whose time has passed
+    for (let i = MORNING_ROUTINE.length - 1; i >= 0; i--) {
+      if (timeInMinutes >= MORNING_ROUTINE[i].timeInMinutes) {
+        // Check if we're still within this step's duration
+        const nextStepTime = i + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[i + 1].timeInMinutes : MORNING_ROUTINE[i].timeInMinutes + 15;
+        if (timeInMinutes < nextStepTime) {
+          console.log(`Current time: ${timeInMinutes}, Step ${i} (${MORNING_ROUTINE[i].time}) - ${MORNING_ROUTINE[i].activity}`);
+          return i; // We're currently in this step
+        }
       }
     }
+    
     return MORNING_ROUTINE.length; // All steps completed
   };
 
   const getTimeUntilNextStep = () => {
     const currentStep = getCurrentStep();
-    if (currentStep >= MORNING_ROUTINE.length || currentStep < 0) return 0;
     
+    // Handle special cases
+    if (currentStep === -2) {
+      // Waiting for routine to start
+      const timeToUse = isDebugMode ? debugTime : currentTime;
+      const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
+      const firstStepTimeInSeconds = MORNING_ROUTINE[0].timeInMinutes * 60;
+      return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
+    }
+    
+    if (currentStep >= MORNING_ROUTINE.length || currentStep < 0) {
+      return 0;
+    }
+    
+    // Time remaining in current step
     const timeToUse = isDebugMode ? debugTime : currentTime;
     const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
-    const nextStepTimeInSeconds = MORNING_ROUTINE[currentStep].timeInMinutes * 60;
     
-    return Math.max(0, (nextStepTimeInSeconds - currentTimeInSeconds) / 60); // Return in minutes with decimal for seconds
+    // Calculate when this step ends (next step starts, or +15 minutes for last step)
+    const nextStepTime = currentStep + 1 < MORNING_ROUTINE.length 
+      ? MORNING_ROUTINE[currentStep + 1].timeInMinutes 
+      : MORNING_ROUTINE[currentStep].timeInMinutes + 15;
+    
+    const nextStepTimeInSeconds = nextStepTime * 60;
+    
+    return Math.max(0, nextStepTimeInSeconds - currentTimeInSeconds);
   };
 
-  const formatTimeRemaining = (minutes: number) => {
-    if (minutes === 0) return "00:00";
-    const mins = Math.floor(minutes);
-    const secs = Math.floor((minutes - mins) * 60);
+  const formatTimeRemaining = (seconds: number) => {
+    if (seconds === 0) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
   };
 
   const getProgressPercentage = () => {
@@ -187,10 +219,11 @@ function App() {
     
     const timeInMinutes = getCurrentTimeInMinutes();
     
-    // Count completed steps (steps where current time has passed their time)
+    // Count completed steps (steps where their end time has passed)
     let completedSteps = 0;
     for (let i = 0; i < MORNING_ROUTINE.length; i++) {
-      if (timeInMinutes >= MORNING_ROUTINE[i].timeInMinutes) {
+      const nextStepTime = i + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[i + 1].timeInMinutes : MORNING_ROUTINE[i].timeInMinutes + 15;
+      if (timeInMinutes >= nextStepTime) {
         completedSteps++;
       } else {
         break;
@@ -247,8 +280,8 @@ function App() {
   }
 
   // Early morning case - automatically show waiting screen
-  if (getCurrentTimeInMinutes() < MORNING_ROUTINE[0].timeInMinutes) {
-    const timeUntilStart = MORNING_ROUTINE[0].timeInMinutes - getCurrentTimeInMinutes();
+  if (currentStep === -2) {
+    const timeUntilStart = getTimeUntilNextStep();
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
         {/* Debug Mode Toggle */}
@@ -321,6 +354,12 @@ function App() {
     );
   }
 
+  // Ensure we have a valid current step
+  if (currentStep < 0 || currentStep >= MORNING_ROUTINE.length) {
+    // This shouldn't happen with our logic, but safety check
+    return null;
+  }
+
   const currentActivity = MORNING_ROUTINE[currentStep];
   const nextActivity = currentStep + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[currentStep + 1] : null;
 
@@ -353,7 +392,7 @@ function App() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-2xl font-bold">Morning Routine Progress</h3>
             <Badge variant="secondary" className="text-lg px-4 py-2">
-              Step {currentStep + 1} of {MORNING_ROUTINE.length}
+              {currentStep >= 0 ? `Step ${currentStep + 1} of ${MORNING_ROUTINE.length}` : 'Starting Soon'}
             </Badge>
           </div>
           <Progress value={progressPercentage} className="h-4 mb-6" />
@@ -362,8 +401,10 @@ function App() {
           <div className="grid grid-cols-5 gap-4">
             {MORNING_ROUTINE.map((step, index) => {
               const timeInMinutes = getCurrentTimeInMinutes();
-              const stepCompleted = timeInMinutes >= step.timeInMinutes;
-              const stepActive = !stepCompleted && index === currentStep;
+              const stepStarted = timeInMinutes >= step.timeInMinutes;
+              const nextStepTime = index + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[index + 1].timeInMinutes : step.timeInMinutes + 15;
+              const stepCompleted = timeInMinutes >= nextStepTime;
+              const stepActive = stepStarted && !stepCompleted;
               
               return (
                 <div 
