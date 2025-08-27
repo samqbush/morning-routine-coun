@@ -16,10 +16,10 @@ interface RoutineStep {
 
 const MORNING_ROUTINE: RoutineStep[] = [
   {
-    time: "6:45",
+    time: "6:30",
     activity: "Wake Up Time!",
     description: "Brush Teeth & Potty",
-    timeInMinutes: 6 * 60 + 45,
+    timeInMinutes: 6 * 60 + 30,
     icon: ToothBrush,
     iconColor: "text-blue-500"
   },
@@ -77,9 +77,9 @@ function App() {
       newTime.setHours(22, 0, 0, 0);
       setDebugTime(newTime);
     } else if (stepIndex === -2) {
-      // Set to 6:30 AM (before routine starts)
+      // Set to 6:15 AM (before routine starts)
       const newTime = new Date();
-      newTime.setHours(6, 30, 0, 0);
+      newTime.setHours(6, 15, 0, 0);
       setDebugTime(newTime);
     } else if (stepIndex >= MORNING_ROUTINE.length) {
       // Set to after routine is done (7:30 AM)
@@ -110,7 +110,7 @@ function App() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
-            Before Start (6:30)
+            Before Start (6:15)
           </Button>
           {MORNING_ROUTINE.map((step, index) => (
             <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
@@ -241,7 +241,7 @@ function App() {
   if (currentStep === -1) {
     const timeToUse = isDebugMode ? debugTime : currentTime;
     const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6; // Until 6 AM tomorrow
-    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 45; // Until 6:45 AM
+    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 30; // Until 6:30 AM
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
         {/* Debug Mode Toggle */}
@@ -266,7 +266,7 @@ function App() {
           <Card className="p-12 text-center">
             <div className="space-y-8">
               <h1 className="text-5xl font-black text-primary">See You Tomorrow! 🌙</h1>
-              <p className="text-2xl font-semibold text-muted-foreground">The morning routine will start again at 6:45 AM</p>
+              <p className="text-2xl font-semibold text-muted-foreground">The morning routine will start again at 6:30 AM</p>
               <div className="text-6xl font-black text-secondary">
                 {Math.floor(minutesUntilTomorrow / 60)}h {minutesUntilTomorrow % 60}m
               </div>
