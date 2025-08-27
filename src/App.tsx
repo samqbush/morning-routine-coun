@@ -3,13 +3,15 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Bug } from '@phosphor-icons/react';
+import { Clock, CheckCircle, ArrowRight, Bug, ToothBrush, ForkKnife, Backpack, Sneaker, Bus } from '@phosphor-icons/react';
 
 interface RoutineStep {
   time: string;
   activity: string;
   description: string;
   timeInMinutes: number;
+  icon: React.ComponentType<any>;
+  iconColor: string;
 }
 
 const MORNING_ROUTINE: RoutineStep[] = [
@@ -17,31 +19,41 @@ const MORNING_ROUTINE: RoutineStep[] = [
     time: "6:45",
     activity: "Wake Up Time!",
     description: "Brush Teeth & Potty",
-    timeInMinutes: 6 * 60 + 45
+    timeInMinutes: 6 * 60 + 45,
+    icon: ToothBrush,
+    iconColor: "text-blue-500"
   },
   {
     time: "6:50",
     activity: "Breakfast Time!",
     description: "Quick Breakfast of Pancakes & Sausage",
-    timeInMinutes: 6 * 60 + 50
+    timeInMinutes: 6 * 60 + 50,
+    icon: ForkKnife,
+    iconColor: "text-orange-500"
   },
   {
     time: "7:05",
     activity: "Pack Snacks!",
     description: "Fill Water Bottles and Choose Snacks",
-    timeInMinutes: 7 * 60 + 5
+    timeInMinutes: 7 * 60 + 5,
+    icon: () => <div className="text-6xl">🥤</div>,
+    iconColor: "text-cyan-500"
   },
   {
     time: "7:10",
     activity: "Get Ready!",
     description: "Put on Shoes and Backpack",
-    timeInMinutes: 7 * 60 + 10
+    timeInMinutes: 7 * 60 + 10,
+    icon: Backpack,
+    iconColor: "text-purple-500"
   },
   {
     time: "7:15",
     activity: "School Time!",
     description: "Leave for School Bus",
-    timeInMinutes: 7 * 60 + 15
+    timeInMinutes: 7 * 60 + 15,
+    icon: Bus,
+    iconColor: "text-yellow-500"
   }
 ];
 
@@ -328,7 +340,43 @@ function App() {
               Step {currentStep + 1} of {MORNING_ROUTINE.length}
             </Badge>
           </div>
-          <Progress value={progressPercentage} className="h-4" />
+          <Progress value={progressPercentage} className="h-4 mb-6" />
+          
+          {/* Visual routine overview */}
+          <div className="grid grid-cols-5 gap-4">
+            {MORNING_ROUTINE.map((step, index) => (
+              <div 
+                key={index} 
+                className={`text-center p-3 rounded-lg transition-all ${
+                  index < currentStep 
+                    ? 'bg-accent/20 border-2 border-accent' 
+                    : index === currentStep 
+                    ? 'bg-primary/20 border-2 border-primary animate-pulse' 
+                    : 'bg-muted/50 border border-muted'
+                }`}
+              >
+                <step.icon 
+                  size={32} 
+                  className={`mx-auto mb-2 ${
+                    index < currentStep 
+                      ? 'text-accent' 
+                      : index === currentStep 
+                      ? 'text-primary' 
+                      : 'text-muted-foreground'
+                  }`} 
+                />
+                <div className={`text-sm font-semibold ${
+                  index < currentStep 
+                    ? 'text-accent' 
+                    : index === currentStep 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground'
+                }`}>
+                  {step.time}
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
 
         {/* Main Timer Display */}
@@ -345,6 +393,11 @@ function App() {
             {/* Countdown Timer */}
             <div className="text-9xl font-black text-primary animate-pulse">
               {formatTimeRemaining(timeRemaining)}
+            </div>
+
+            {/* Activity Icon */}
+            <div className="my-8">
+              <currentActivity.icon size={120} className={`mx-auto ${currentActivity.iconColor}`} />
             </div>
 
             {/* Current Activity */}
@@ -367,15 +420,18 @@ function App() {
         {nextActivity && (
           <Card className="p-8">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-muted-foreground mb-2">Up Next:</h3>
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="text-xl px-4 py-2">
-                    {nextActivity.time}
-                  </Badge>
-                  <span className="text-2xl font-semibold">{nextActivity.activity}</span>
+              <div className="flex items-center gap-6">
+                <nextActivity.icon size={48} className={nextActivity.iconColor} />
+                <div>
+                  <h3 className="text-2xl font-bold text-muted-foreground mb-2">Up Next:</h3>
+                  <div className="flex items-center gap-4">
+                    <Badge variant="outline" className="text-xl px-4 py-2">
+                      {nextActivity.time}
+                    </Badge>
+                    <span className="text-2xl font-semibold">{nextActivity.activity}</span>
+                  </div>
+                  <p className="text-xl text-muted-foreground mt-2">{nextActivity.description}</p>
                 </div>
-                <p className="text-xl text-muted-foreground mt-2">{nextActivity.description}</p>
               </div>
               <ArrowRight size={48} className="text-muted-foreground" />
             </div>
