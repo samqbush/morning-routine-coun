@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Bug, ToothBrush, ForkKnife, Backpack, Sneaker, Bus } from '@phosphor-icons/react';
+import { Clock, CheckCircle, ArrowRight, Bug, ToothBrush, ForkKnife, Backpack, Sneaker, Bus, SpeakerHigh } from '@phosphor-icons/react';
 
 interface RoutineStep {
   time: string;
@@ -61,6 +61,8 @@ function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [debugTime, setDebugTime] = useState(new Date());
+  const [lastStep, setLastStep] = useState<number>(-3); // Track the last step to detect changes
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,7 +72,59 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Initialize audio context on first user interaction
+  const initializeAudio = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+  };
+
+  // Play notification sound
+  const playStepChangeSound = () => {
+    initializeAudio();
+    
+    if (!audioContextRef.current) return;
+    
+    try {
+      const ctx = audioContextRef.current;
+      
+      // Create a pleasant chime sound
+      const oscillator1 = ctx.createOscillator();
+      const oscillator2 = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      // Connect nodes
+      oscillator1.connect(gainNode);
+      oscillator2.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Set frequencies for a pleasant chord (C major)
+      oscillator1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      oscillator2.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+      
+      // Set wave types
+      oscillator1.type = 'sine';
+      oscillator2.type = 'sine';
+      
+      // Create envelope
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+      
+      // Start and stop
+      const startTime = ctx.currentTime;
+      oscillator1.start(startTime);
+      oscillator2.start(startTime);
+      oscillator1.stop(startTime + 0.8);
+      oscillator2.stop(startTime + 0.8);
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+    }
+  };
+
   const setDebugTimeToStep = (stepIndex: number) => {
+    initializeAudio(); // Initialize audio when using debug controls
+    
     if (stepIndex === -1) {
       // Set to 10 PM (waiting for tomorrow)
       const newTime = new Date();
@@ -92,6 +146,9 @@ function App() {
       const newTime = new Date();
       newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
       setDebugTime(newTime);
+      
+      // Play sound when jumping to a new step in debug mode
+      setTimeout(() => playStepChangeSound(), 100);
     }
   };
 
@@ -135,6 +192,15 @@ function App() {
             }}
           >
             Exit Debug Mode
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => playStepChangeSound()}
+            className="gap-2"
+          >
+            <SpeakerHigh size={16} />
+            Test Sound
           </Button>
         </div>
       </div>
@@ -237,6 +303,17 @@ function App() {
   const timeRemaining = getTimeUntilNextStep();
   const progressPercentage = getProgressPercentage();
 
+  // Detect step changes and play sound
+  useEffect(() => {
+    if (currentStep !== lastStep && currentStep >= 0) {
+      // Only play sound for actual step changes (not initial load or special states)
+      if (lastStep >= -2) {
+        playStepChangeSound();
+      }
+      setLastStep(currentStep);
+    }
+  }, [currentStep, lastStep]);
+
   // Late in day case - show waiting for tomorrow
   if (currentStep === -1) {
     const timeToUse = isDebugMode ? debugTime : currentTime;
@@ -250,7 +327,10 @@ function App() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsDebugMode(true)}
+              onClick={() => {
+                initializeAudio(); // Initialize audio on user interaction
+                setIsDebugMode(true);
+              }}
               className="gap-2"
             >
               <Bug size={16} />
@@ -289,7 +369,10 @@ function App() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsDebugMode(true)}
+              onClick={() => {
+                initializeAudio(); // Initialize audio on user interaction
+                setIsDebugMode(true);
+              }}
               className="gap-2"
             >
               <Bug size={16} />
@@ -327,7 +410,10 @@ function App() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsDebugMode(true)}
+              onClick={() => {
+                initializeAudio(); // Initialize audio on user interaction
+                setIsDebugMode(true);
+              }}
               className="gap-2"
             >
               <Bug size={16} />
@@ -374,7 +460,10 @@ function App() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsDebugMode(true)}
+              onClick={() => {
+                initializeAudio(); // Initialize audio on user interaction
+                setIsDebugMode(true);
+              }}
               className="gap-2"
             >
               <Bug size={16} />
@@ -450,6 +539,10 @@ function App() {
               <Clock size={32} />
               <span>{(isDebugMode ? debugTime : currentTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               {isDebugMode && <Badge variant="destructive" className="ml-2">TEST MODE</Badge>}
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <SpeakerHigh size={16} />
+                <span className="text-xs">Audio Alerts</span>
+              </div>
             </div>
 
             {/* Countdown Timer */}
