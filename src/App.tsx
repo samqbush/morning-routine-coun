@@ -154,9 +154,10 @@ function App() {
       return -1; // Special case for "waiting for tomorrow"
     }
     
+    // Find which step we should be on - if we've reached a step time, we're on that step
     for (let i = 0; i < MORNING_ROUTINE.length; i++) {
-      if (timeInMinutes <= MORNING_ROUTINE[i].timeInMinutes) {
-        return i;
+      if (timeInMinutes < MORNING_ROUTINE[i].timeInMinutes) {
+        return i; // We haven't reached this step yet
       }
     }
     return MORNING_ROUTINE.length; // All steps completed
@@ -166,9 +167,11 @@ function App() {
     const currentStep = getCurrentStep();
     if (currentStep >= MORNING_ROUTINE.length || currentStep < 0) return 0;
     
-    const timeInMinutes = getCurrentTimeInMinutes();
-    const nextStepTime = MORNING_ROUTINE[currentStep].timeInMinutes;
-    return Math.max(0, nextStepTime - timeInMinutes);
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
+    const nextStepTimeInSeconds = MORNING_ROUTINE[currentStep].timeInMinutes * 60;
+    
+    return Math.max(0, (nextStepTimeInSeconds - currentTimeInSeconds) / 60); // Return in minutes with decimal for seconds
   };
 
   const formatTimeRemaining = (minutes: number) => {
@@ -181,8 +184,21 @@ function App() {
   const getProgressPercentage = () => {
     const currentStep = getCurrentStep();
     if (currentStep < 0) return 0;
+    
+    const timeInMinutes = getCurrentTimeInMinutes();
+    
+    // Count completed steps (steps where current time has passed their time)
+    let completedSteps = 0;
+    for (let i = 0; i < MORNING_ROUTINE.length; i++) {
+      if (timeInMinutes >= MORNING_ROUTINE[i].timeInMinutes) {
+        completedSteps++;
+      } else {
+        break;
+      }
+    }
+    
     const totalSteps = MORNING_ROUTINE.length;
-    return (currentStep / totalSteps) * 100;
+    return (completedSteps / totalSteps) * 100;
   };
 
   const currentStep = getCurrentStep();
@@ -344,38 +360,44 @@ function App() {
           
           {/* Visual routine overview */}
           <div className="grid grid-cols-5 gap-4">
-            {MORNING_ROUTINE.map((step, index) => (
-              <div 
-                key={index} 
-                className={`text-center p-3 rounded-lg transition-all ${
-                  index < currentStep 
-                    ? 'bg-accent/20 border-2 border-accent' 
-                    : index === currentStep 
-                    ? 'bg-primary/20 border-2 border-primary animate-pulse' 
-                    : 'bg-muted/50 border border-muted'
-                }`}
-              >
-                <step.icon 
-                  size={32} 
-                  className={`mx-auto mb-2 ${
-                    index < currentStep 
+            {MORNING_ROUTINE.map((step, index) => {
+              const timeInMinutes = getCurrentTimeInMinutes();
+              const stepCompleted = timeInMinutes >= step.timeInMinutes;
+              const stepActive = !stepCompleted && index === currentStep;
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`text-center p-3 rounded-lg transition-all ${
+                    stepCompleted
+                      ? 'bg-accent/20 border-2 border-accent' 
+                      : stepActive
+                      ? 'bg-primary/20 border-2 border-primary animate-pulse' 
+                      : 'bg-muted/50 border border-muted'
+                  }`}
+                >
+                  <step.icon 
+                    size={32} 
+                    className={`mx-auto mb-2 ${
+                      stepCompleted
+                        ? 'text-accent' 
+                        : stepActive
+                        ? 'text-primary' 
+                        : 'text-muted-foreground'
+                    }`} 
+                  />
+                  <div className={`text-sm font-semibold ${
+                    stepCompleted
                       ? 'text-accent' 
-                      : index === currentStep 
+                      : stepActive
                       ? 'text-primary' 
                       : 'text-muted-foreground'
-                  }`} 
-                />
-                <div className={`text-sm font-semibold ${
-                  index < currentStep 
-                    ? 'text-accent' 
-                    : index === currentStep 
-                    ? 'text-primary' 
-                    : 'text-muted-foreground'
-                }`}>
-                  {step.time}
+                  }`}>
+                    {step.time}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 
