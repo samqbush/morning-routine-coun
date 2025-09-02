@@ -677,10 +677,7 @@ function App() {
               </div>
             </div>
 
-            {/* Activity Icon */}
-            <div className="my-8">
-              <currentActivity.icon size={120} className={`mx-auto ${currentActivity.iconColor}`} />
-            </div>
+
 
             {/* Current Activity */}
             <div className="space-y-4">
