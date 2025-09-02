@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Bug, ToothBrush, ForkKnife, Backpack, Sneaker, Bus, SpeakerHigh } from '@phosphor-icons/react';
+import { Clock, CheckCircle, ArrowRight, Bug, Toilet, ForkKnife, Backpack, Sneaker, Bus, SpeakerHigh } from '@phosphor-icons/react';
 
 interface RoutineStep {
   time: string;
@@ -20,7 +20,7 @@ const MORNING_ROUTINE: RoutineStep[] = [
     activity: "Wake Up Time!",
     description: "Brush Teeth & Potty",
     timeInMinutes: 6 * 60 + 30,
-    icon: ToothBrush,
+    icon: Toilet,
     iconColor: "text-blue-500"
   },
   {
