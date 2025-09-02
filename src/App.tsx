@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Bug, Toilet, ForkKnife, Backpack, Sneaker, Bus, SpeakerHigh } from '@phosphor-icons/react';
+import { Clock, CheckCircle, ArrowRight, Bug, Toilet, ForkKnife, Backpack, Sneaker, Bus, SpeakerHigh, SpeakerX } from '@phosphor-icons/react';
 
 interface RoutineStep {
   time: string;
@@ -63,6 +63,7 @@ function App() {
   const [debugTime, setDebugTime] = useState(new Date());
   const [lastStep, setLastStep] = useState<number>(-3); // Track the last step to detect changes
   const audioContextRef = useRef<AudioContext | null>(null);
+  const [speechEnabled, setSpeechEnabled] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -122,6 +123,52 @@ function App() {
     }
   };
 
+  // Announce activity using speech synthesis
+  const announceActivity = (stepIndex: number) => {
+    if (!speechEnabled || !('speechSynthesis' in window)) return;
+    
+    try {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      let message = '';
+      
+      if (stepIndex === -2) {
+        message = 'Good morning! Get ready to start your routine!';
+      } else if (stepIndex === -1) {
+        message = 'Good night! See you tomorrow morning!';
+      } else if (stepIndex >= MORNING_ROUTINE.length) {
+        message = 'Great job! You completed your morning routine! Have a wonderful day at school!';
+      } else if (stepIndex >= 0 && stepIndex < MORNING_ROUTINE.length) {
+        const activity = MORNING_ROUTINE[stepIndex];
+        message = `Time for ${activity.activity}! ${activity.description}`;
+      }
+      
+      if (message) {
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 0.8;
+        
+        // Use a pleasant voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice => 
+          voice.name.includes('Samantha') || 
+          voice.name.includes('Karen') || 
+          voice.name.includes('Daniel') ||
+          voice.lang.startsWith('en-')
+        );
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+        
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (error) {
+      console.warn('Speech synthesis failed:', error);
+    }
+  };
+
   const setDebugTimeToStep = (stepIndex: number) => {
     initializeAudio(); // Initialize audio when using debug controls
     
@@ -148,7 +195,10 @@ function App() {
       setDebugTime(newTime);
       
       // Play sound when jumping to a new step in debug mode
-      setTimeout(() => playStepChangeSound(), 100);
+      setTimeout(() => {
+        playStepChangeSound();
+        announceActivity(stepIndex);
+      }, 100);
     }
   };
 
@@ -165,7 +215,7 @@ function App() {
           Current debug time: {(isDebugMode ? debugTime : currentTime).toLocaleTimeString()}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
             Before Start (6:15)
           </Button>
@@ -182,7 +232,7 @@ function App() {
           </Button>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button 
             size="sm" 
             variant="secondary" 
@@ -201,6 +251,24 @@ function App() {
           >
             <SpeakerHigh size={16} />
             Test Sound
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => announceActivity(getCurrentStep())}
+            className="gap-2"
+          >
+            {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
+            Test Voice
+          </Button>
+          <Button 
+            size="sm" 
+            variant={speechEnabled ? "default" : "secondary"}
+            onClick={() => setSpeechEnabled(!speechEnabled)}
+            className="gap-2"
+          >
+            {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
+            {speechEnabled ? 'Voice On' : 'Voice Off'}
           </Button>
         </div>
       </div>
@@ -345,12 +413,13 @@ function App() {
   const timeRemaining = getTimeUntilNextStep();
   const progressPercentage = getProgressPercentage();
 
-  // Detect step changes and play sound
+  // Detect step changes and play sound + voice announcement
   useEffect(() => {
-    if (currentStep !== lastStep && currentStep >= 0) {
-      // Only play sound for actual step changes (not initial load or special states)
-      if (lastStep >= -2) {
+    if (currentStep !== lastStep) {
+      // Only play sound and announce for actual step changes (not initial load)
+      if (lastStep >= -3 && lastStep !== currentStep) {
         playStepChangeSound();
+        announceActivity(currentStep);
       }
       setLastStep(currentStep);
     }
@@ -621,10 +690,15 @@ function App() {
               <Clock size={32} />
               <span>{(isDebugMode ? debugTime : currentTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               {isDebugMode && <Badge variant="destructive" className="ml-2">TEST MODE</Badge>}
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <SpeakerHigh size={16} />
-                <span className="text-xs">Audio Alerts</span>
-              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSpeechEnabled(!speechEnabled)}
+                className="gap-1 text-sm"
+              >
+                {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
+                <span className="text-xs">{speechEnabled ? 'Voice On' : 'Voice Off'}</span>
+              </Button>
             </div>
 
             {/* Countdown Timer with color transition */}
