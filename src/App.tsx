@@ -299,6 +299,30 @@ function App() {
     return (completedSteps / totalSteps) * 100;
   };
 
+  const getStepDuration = () => {
+    const currentStep = getCurrentStep();
+    
+    if (currentStep === -2) {
+      // Duration until first step starts
+      const timeToUse = isDebugMode ? debugTime : currentTime;
+      const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
+      const firstStepTimeInSeconds = MORNING_ROUTINE[0].timeInMinutes * 60;
+      return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
+    }
+    
+    if (currentStep < 0 || currentStep >= MORNING_ROUTINE.length) {
+      return 300; // Default 5 minutes for edge cases
+    }
+    
+    // Duration of current step
+    const nextStepTime = currentStep + 1 < MORNING_ROUTINE.length 
+      ? MORNING_ROUTINE[currentStep + 1].timeInMinutes 
+      : MORNING_ROUTINE[currentStep].timeInMinutes + 15;
+    
+    const stepDurationInMinutes = nextStepTime - MORNING_ROUTINE[currentStep].timeInMinutes;
+    return stepDurationInMinutes * 60; // Convert to seconds
+  };
+
   const currentStep = getCurrentStep();
   const timeRemaining = getTimeUntilNextStep();
   const progressPercentage = getProgressPercentage();
@@ -389,6 +413,46 @@ function App() {
             <div className="space-y-8">
               <h1 className="text-6xl font-black text-primary">Good Morning! 🌅</h1>
               <p className="text-3xl font-semibold text-muted-foreground">Get Ready to Start Your Routine!</p>
+              
+              {/* Visual Timer Ring for Pre-Routine */}
+              <div className="relative w-64 h-64 mx-auto">
+                {/* Background circle */}
+                <svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 256 256">
+                  <circle
+                    cx="128"
+                    cy="128"
+                    r="120"
+                    stroke="currentColor"
+                    strokeWidth="16"
+                    fill="none"
+                    className="text-muted/30"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="128"
+                    cy="128"
+                    r="120"
+                    stroke="currentColor"
+                    strokeWidth="16"
+                    fill="none"
+                    strokeDasharray={`${2 * Math.PI * 120}`}
+                    strokeDashoffset={`${2 * Math.PI * 120 * (timeUntilStart / getStepDuration())}`}
+                    className="text-secondary transition-all duration-1000 ease-linear"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                
+                {/* Center content */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-6xl mb-2">⏰</div>
+                    <div className="text-lg font-bold text-secondary">
+                      {Math.ceil(timeUntilStart / 60)}min
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="text-8xl font-black text-secondary animate-pulse">
                 {formatTimeRemaining(timeUntilStart)}
               </div>
@@ -548,6 +612,45 @@ function App() {
             {/* Countdown Timer */}
             <div className="text-9xl font-black text-primary animate-pulse">
               {formatTimeRemaining(timeRemaining)}
+            </div>
+
+            {/* Visual Timer Ring for Non-Readers */}
+            <div className="relative w-64 h-64 mx-auto my-8">
+              {/* Background circle */}
+              <svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 256 256">
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="120"
+                  stroke="currentColor"
+                  strokeWidth="16"
+                  fill="none"
+                  className="text-muted/30"
+                />
+                {/* Progress circle */}
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="120"
+                  stroke="currentColor"
+                  strokeWidth="16"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 120}`}
+                  strokeDashoffset={`${2 * Math.PI * 120 * (1 - (timeRemaining / getStepDuration()))}`}
+                  className="text-primary transition-all duration-1000 ease-linear"
+                  strokeLinecap="round"
+                />
+              </svg>
+              
+              {/* Center content */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <currentActivity.icon size={80} className={`mx-auto ${currentActivity.iconColor}`} />
+                  <div className="mt-2 text-lg font-bold text-primary">
+                    {Math.ceil(timeRemaining / 60)}min
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Activity Icon */}
