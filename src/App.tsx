@@ -323,6 +323,24 @@ function App() {
     return stepDurationInMinutes * 60; // Convert to seconds
   };
 
+  // Get color based on time remaining percentage
+  const getTimerColor = () => {
+    const stepDuration = getStepDuration();
+    const timeRemainingSeconds = getTimeUntilNextStep();
+    const percentageRemaining = stepDuration > 0 ? timeRemainingSeconds / stepDuration : 0;
+    
+    // Green (good time) to yellow (moderate) to red (urgent)
+    if (percentageRemaining > 0.5) {
+      // Green to yellow transition (100% = green, 50% = yellow)
+      const greenToYellow = (percentageRemaining - 0.5) * 2;
+      return `rgb(${Math.round(255 * (1 - greenToYellow))}, 255, 0)`;
+    } else {
+      // Yellow to red transition (50% = yellow, 0% = red)
+      const yellowToRed = percentageRemaining * 2;
+      return `rgb(255, ${Math.round(255 * yellowToRed)}, 0)`;
+    }
+  };
+
   const currentStep = getCurrentStep();
   const timeRemaining = getTimeUntilNextStep();
   const progressPercentage = getProgressPercentage();
@@ -432,12 +450,12 @@ function App() {
                     cx="128"
                     cy="128"
                     r="120"
-                    stroke="currentColor"
+                    stroke={getTimerColor()}
                     strokeWidth="16"
                     fill="none"
                     strokeDasharray={`${2 * Math.PI * 120}`}
                     strokeDashoffset={`${2 * Math.PI * 120 * (timeUntilStart / getStepDuration())}`}
-                    className="text-secondary transition-all duration-1000 ease-linear"
+                    className="transition-all duration-1000 ease-linear"
                     strokeLinecap="round"
                   />
                 </svg>
@@ -609,8 +627,11 @@ function App() {
               </div>
             </div>
 
-            {/* Countdown Timer */}
-            <div className="text-9xl font-black text-primary animate-pulse">
+            {/* Countdown Timer with color transition */}
+            <div 
+              className="text-9xl font-black animate-pulse transition-colors duration-1000"
+              style={{ color: getTimerColor() }}
+            >
               {formatTimeRemaining(timeRemaining)}
             </div>
 
@@ -627,17 +648,17 @@ function App() {
                   fill="none"
                   className="text-muted/30"
                 />
-                {/* Progress circle */}
+                {/* Progress circle with color transition */}
                 <circle
                   cx="128"
                   cy="128"
                   r="120"
-                  stroke="currentColor"
+                  stroke={getTimerColor()}
                   strokeWidth="16"
                   fill="none"
                   strokeDasharray={`${2 * Math.PI * 120}`}
                   strokeDashoffset={`${2 * Math.PI * 120 * (1 - (timeRemaining / getStepDuration()))}`}
-                  className="text-primary transition-all duration-1000 ease-linear"
+                  className="transition-all duration-1000 ease-linear"
                   strokeLinecap="round"
                 />
               </svg>
@@ -646,7 +667,10 @@ function App() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <currentActivity.icon size={80} className={`mx-auto ${currentActivity.iconColor}`} />
-                  <div className="mt-2 text-lg font-bold text-primary">
+                  <div 
+                    className="mt-2 text-lg font-bold transition-colors duration-1000"
+                    style={{ color: getTimerColor() }}
+                  >
                     {Math.ceil(timeRemaining / 60)}min
                   </div>
                 </div>
