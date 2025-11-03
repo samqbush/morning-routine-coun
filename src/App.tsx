@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Bug, Toilet, ForkKnife, Backpack, Sneaker, Bus, SpeakerHigh, SpeakerX } from '@phosphor-icons/react';
+import { Clock, CheckCircle, ArrowRight, Bug, Toilet, ForkKnife, Backpack, Bus, SpeakerHigh, SpeakerX, Moon, GameController, Book, Pill } from '@phosphor-icons/react';
 
 interface RoutineStep {
   time: string;
@@ -12,48 +12,108 @@ interface RoutineStep {
   timeInMinutes: number;
   icon: React.ComponentType<any>;
   iconColor: string;
+  routineType: 'morning' | 'evening';
 }
 
-const MORNING_ROUTINE: RoutineStep[] = [
+const DAILY_ROUTINE: RoutineStep[] = [
   {
-    time: "6:30",
+    time: "6:30 AM",
     activity: "Wake Up Time!",
     description: "Brush Teeth & Potty",
     timeInMinutes: 6 * 60 + 30,
     icon: Toilet,
-    iconColor: "text-blue-500"
+    iconColor: "text-blue-500",
+    routineType: 'morning'
   },
   {
-    time: "6:50",
+    time: "6:50 AM",
     activity: "Breakfast Time!",
     description: "Quick Breakfast of Pancakes & Sausage",
     timeInMinutes: 6 * 60 + 50,
     icon: ForkKnife,
-    iconColor: "text-orange-500"
+    iconColor: "text-orange-500",
+    routineType: 'morning'
   },
   {
-    time: "7:05",
+    time: "7:05 AM",
     activity: "Pack Snacks!",
     description: "Fill Water Bottles and Choose Snacks",
     timeInMinutes: 7 * 60 + 5,
     icon: () => <div className="text-6xl">🥤</div>,
-    iconColor: "text-cyan-500"
+    iconColor: "text-cyan-500",
+    routineType: 'morning'
   },
   {
-    time: "7:10",
+    time: "7:10 AM",
     activity: "Get Ready!",
     description: "Put on Shoes and Backpack",
     timeInMinutes: 7 * 60 + 10,
     icon: Backpack,
-    iconColor: "text-purple-500"
+    iconColor: "text-purple-500",
+    routineType: 'morning'
   },
   {
-    time: "7:17",
+    time: "7:17 AM",
     activity: "School Time!",
     description: "Leave for School Bus",
     timeInMinutes: 7 * 60 + 17,
     icon: Bus,
-    iconColor: "text-yellow-500"
+    iconColor: "text-yellow-500",
+    routineType: 'morning'
+  },
+  {
+    time: "5:30 PM",
+    activity: "Dinner Time!",
+    description: "Family Dinner Together",
+    timeInMinutes: 17 * 60 + 30,
+    icon: ForkKnife,
+    iconColor: "text-red-500",
+    routineType: 'evening'
+  },
+  {
+    time: "6:30 PM",
+    activity: "Family Activity!",
+    description: "Fun Time Together",
+    timeInMinutes: 18 * 60 + 30,
+    icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+    iconColor: "text-pink-500",
+    routineType: 'evening'
+  },
+  {
+    time: "7:00 PM",
+    activity: "Twins Get Ready!",
+    description: "Brush Teeth, Potty & Allergy Medicine",
+    timeInMinutes: 19 * 60 + 0,
+    icon: Pill,
+    iconColor: "text-teal-500",
+    routineType: 'evening'
+  },
+  {
+    time: "7:15 PM",
+    activity: "Story Time!",
+    description: "Daddy Reads Books to Twins",
+    timeInMinutes: 19 * 60 + 15,
+    icon: Book,
+    iconColor: "text-indigo-500",
+    routineType: 'evening'
+  },
+  {
+    time: "7:30 PM",
+    activity: "Game Time!",
+    description: "Jack & Daddy Play Video Games",
+    timeInMinutes: 19 * 60 + 30,
+    icon: GameController,
+    iconColor: "text-green-500",
+    routineType: 'evening'
+  },
+  {
+    time: "8:30 PM",
+    activity: "Jack's Bedtime!",
+    description: "Brush Teeth & Get a Book",
+    timeInMinutes: 20 * 60 + 30,
+    icon: Book,
+    iconColor: "text-violet-500",
+    routineType: 'evening'
   }
 ];
 
@@ -137,10 +197,10 @@ function App() {
         message = 'Good morning! Get ready to start your routine!';
       } else if (stepIndex === -1) {
         message = 'Good night! See you tomorrow morning!';
-      } else if (stepIndex >= MORNING_ROUTINE.length) {
-        message = 'Great job! You completed your morning routine! Have a wonderful day at school!';
-      } else if (stepIndex >= 0 && stepIndex < MORNING_ROUTINE.length) {
-        const activity = MORNING_ROUTINE[stepIndex];
+      } else if (stepIndex >= DAILY_ROUTINE.length) {
+        message = 'Great job! You completed all your routines for today!';
+      } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
+        const activity = DAILY_ROUTINE[stepIndex];
         message = `Time for ${activity.activity}! ${activity.description}`;
       }
       
@@ -182,14 +242,14 @@ function App() {
       const newTime = new Date();
       newTime.setHours(6, 15, 0, 0);
       setDebugTime(newTime);
-    } else if (stepIndex >= MORNING_ROUTINE.length) {
-      // Set to after routine is done (7:30 AM)
+    } else if (stepIndex >= DAILY_ROUTINE.length) {
+      // Set to after routine is done (9:00 PM)
       const newTime = new Date();
-      newTime.setHours(7, 30, 0, 0);
+      newTime.setHours(21, 0, 0, 0);
       setDebugTime(newTime);
     } else {
       // Set to the exact step time
-      const stepTime = MORNING_ROUTINE[stepIndex].timeInMinutes;
+      const stepTime = DAILY_ROUTINE[stepIndex].timeInMinutes;
       const newTime = new Date();
       newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
       setDebugTime(newTime);
@@ -217,18 +277,18 @@ function App() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
-            Before Start (6:15)
+            Before Start (6:15 AM)
           </Button>
-          {MORNING_ROUTINE.map((step, index) => (
+          {DAILY_ROUTINE.map((step, index) => (
             <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
               {step.time} - {step.activity}
             </Button>
           ))}
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(MORNING_ROUTINE.length)}>
-            Finished (7:30)
+          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
+            Finished (9:00 PM)
           </Button>
           <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
-            Evening (10:00 PM)
+            Late Night (10:00 PM)
           </Button>
         </div>
 
@@ -283,30 +343,30 @@ function App() {
   const getCurrentStep = () => {
     const timeInMinutes = getCurrentTimeInMinutes();
     
-    // If it's late in the day (after 8 AM), automatically reset for next day
-    if (timeInMinutes > 8 * 60) {
+    // If it's late in the day (after 9 PM), automatically reset for next day
+    if (timeInMinutes > 21 * 60) {
       return -1; // Special case for "waiting for tomorrow"
     }
     
     // Find which step we're currently in
     // If we haven't reached the first step, return -2 (waiting to start)
-    if (timeInMinutes < MORNING_ROUTINE[0].timeInMinutes) {
+    if (timeInMinutes < DAILY_ROUTINE[0].timeInMinutes) {
       return -2;
     }
     
     // Find the current active step - the last step whose time has passed
-    for (let i = MORNING_ROUTINE.length - 1; i >= 0; i--) {
-      if (timeInMinutes >= MORNING_ROUTINE[i].timeInMinutes) {
+    for (let i = DAILY_ROUTINE.length - 1; i >= 0; i--) {
+      if (timeInMinutes >= DAILY_ROUTINE[i].timeInMinutes) {
         // Check if we're still within this step's duration
-        const nextStepTime = i + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[i + 1].timeInMinutes : MORNING_ROUTINE[i].timeInMinutes + 15;
+        const nextStepTime = i + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[i + 1].timeInMinutes : DAILY_ROUTINE[i].timeInMinutes + 15;
         if (timeInMinutes < nextStepTime) {
-          console.log(`Current time: ${timeInMinutes}, Step ${i} (${MORNING_ROUTINE[i].time}) - ${MORNING_ROUTINE[i].activity}`);
+          console.log(`Current time: ${timeInMinutes}, Step ${i} (${DAILY_ROUTINE[i].time}) - ${DAILY_ROUTINE[i].activity}`);
           return i; // We're currently in this step
         }
       }
     }
     
-    return MORNING_ROUTINE.length; // All steps completed
+    return DAILY_ROUTINE.length; // All steps completed
   };
 
   const getTimeUntilNextStep = () => {
@@ -317,11 +377,11 @@ function App() {
       // Waiting for routine to start
       const timeToUse = isDebugMode ? debugTime : currentTime;
       const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
-      const firstStepTimeInSeconds = MORNING_ROUTINE[0].timeInMinutes * 60;
+      const firstStepTimeInSeconds = DAILY_ROUTINE[0].timeInMinutes * 60;
       return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
     }
     
-    if (currentStep >= MORNING_ROUTINE.length || currentStep < 0) {
+    if (currentStep >= DAILY_ROUTINE.length || currentStep < 0) {
       return 0;
     }
     
@@ -330,9 +390,9 @@ function App() {
     const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
     
     // Calculate when this step ends (next step starts, or +15 minutes for last step)
-    const nextStepTime = currentStep + 1 < MORNING_ROUTINE.length 
-      ? MORNING_ROUTINE[currentStep + 1].timeInMinutes 
-      : MORNING_ROUTINE[currentStep].timeInMinutes + 15;
+    const nextStepTime = currentStep + 1 < DAILY_ROUTINE.length 
+      ? DAILY_ROUTINE[currentStep + 1].timeInMinutes 
+      : DAILY_ROUTINE[currentStep].timeInMinutes + 15;
     
     const nextStepTimeInSeconds = nextStepTime * 60;
     
@@ -354,8 +414,8 @@ function App() {
     
     // Count completed steps (steps where their end time has passed)
     let completedSteps = 0;
-    for (let i = 0; i < MORNING_ROUTINE.length; i++) {
-      const nextStepTime = i + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[i + 1].timeInMinutes : MORNING_ROUTINE[i].timeInMinutes + 15;
+    for (let i = 0; i < DAILY_ROUTINE.length; i++) {
+      const nextStepTime = i + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[i + 1].timeInMinutes : DAILY_ROUTINE[i].timeInMinutes + 15;
       if (timeInMinutes >= nextStepTime) {
         completedSteps++;
       } else {
@@ -363,7 +423,7 @@ function App() {
       }
     }
     
-    const totalSteps = MORNING_ROUTINE.length;
+    const totalSteps = DAILY_ROUTINE.length;
     return (completedSteps / totalSteps) * 100;
   };
 
@@ -374,20 +434,20 @@ function App() {
       // Duration until first step starts
       const timeToUse = isDebugMode ? debugTime : currentTime;
       const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
-      const firstStepTimeInSeconds = MORNING_ROUTINE[0].timeInMinutes * 60;
+      const firstStepTimeInSeconds = DAILY_ROUTINE[0].timeInMinutes * 60;
       return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
     }
     
-    if (currentStep < 0 || currentStep >= MORNING_ROUTINE.length) {
+    if (currentStep < 0 || currentStep >= DAILY_ROUTINE.length) {
       return 300; // Default 5 minutes for edge cases
     }
     
     // Duration of current step
-    const nextStepTime = currentStep + 1 < MORNING_ROUTINE.length 
-      ? MORNING_ROUTINE[currentStep + 1].timeInMinutes 
-      : MORNING_ROUTINE[currentStep].timeInMinutes + 15;
+    const nextStepTime = currentStep + 1 < DAILY_ROUTINE.length 
+      ? DAILY_ROUTINE[currentStep + 1].timeInMinutes 
+      : DAILY_ROUTINE[currentStep].timeInMinutes + 15;
     
-    const stepDurationInMinutes = nextStepTime - MORNING_ROUTINE[currentStep].timeInMinutes;
+    const stepDurationInMinutes = nextStepTime - DAILY_ROUTINE[currentStep].timeInMinutes;
     return stepDurationInMinutes * 60; // Convert to seconds
   };
 
@@ -552,7 +612,7 @@ function App() {
   }
 
   // All done case - automatically reset after 10 minutes
-  if (currentStep >= MORNING_ROUTINE.length) {
+  if (currentStep >= DAILY_ROUTINE.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
         {/* Debug Mode Toggle */}
@@ -581,7 +641,7 @@ function App() {
             <div className="space-y-8">
               <CheckCircle size={120} className="text-accent mx-auto" />
               <h1 className="text-6xl font-black text-accent">Great Job! 🎉</h1>
-              <p className="text-3xl font-semibold text-muted-foreground">Have a wonderful day at school!</p>
+              <p className="text-3xl font-semibold text-muted-foreground">You completed all your routines for today!</p>
               <p className="text-xl text-muted-foreground">This screen will automatically reset for tomorrow</p>
             </div>
           </Card>
@@ -591,13 +651,13 @@ function App() {
   }
 
   // Ensure we have a valid current step
-  if (currentStep < 0 || currentStep >= MORNING_ROUTINE.length) {
+  if (currentStep < 0 || currentStep >= DAILY_ROUTINE.length) {
     // This shouldn't happen with our logic, but safety check
     return null;
   }
 
-  const currentActivity = MORNING_ROUTINE[currentStep];
-  const nextActivity = currentStep + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[currentStep + 1] : null;
+  const currentActivity = DAILY_ROUTINE[currentStep];
+  const nextActivity = currentStep + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[currentStep + 1] : null;
 
 
 
@@ -629,19 +689,19 @@ function App() {
         {/* Progress Bar */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold">Morning Routine Progress</h3>
+            <h3 className="text-2xl font-bold">Daily Routine Progress</h3>
             <Badge variant="secondary" className="text-lg px-4 py-2">
-              {currentStep >= 0 ? `Step ${currentStep + 1} of ${MORNING_ROUTINE.length}` : 'Starting Soon'}
+              {currentStep >= 0 ? `Step ${currentStep + 1} of ${DAILY_ROUTINE.length}` : 'Starting Soon'}
             </Badge>
           </div>
           <Progress value={progressPercentage} className="h-4 mb-6" />
           
           {/* Visual routine overview */}
-          <div className="grid grid-cols-5 gap-4">
-            {MORNING_ROUTINE.map((step, index) => {
+          <div className="grid grid-cols-5 gap-2 md:grid-cols-6 lg:grid-cols-11">
+            {DAILY_ROUTINE.map((step, index) => {
               const timeInMinutes = getCurrentTimeInMinutes();
               const stepStarted = timeInMinutes >= step.timeInMinutes;
-              const nextStepTime = index + 1 < MORNING_ROUTINE.length ? MORNING_ROUTINE[index + 1].timeInMinutes : step.timeInMinutes + 15;
+              const nextStepTime = index + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[index + 1].timeInMinutes : step.timeInMinutes + 15;
               const stepCompleted = timeInMinutes >= nextStepTime;
               const stepActive = stepStarted && !stepCompleted;
               
