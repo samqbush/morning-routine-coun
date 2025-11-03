@@ -48,10 +48,10 @@ const MORNING_ROUTINE: RoutineStep[] = [
     iconColor: "text-purple-500"
   },
   {
-    time: "7:15",
+    time: "7:17",
     activity: "School Time!",
     description: "Leave for School Bus",
-    timeInMinutes: 7 * 60 + 15,
+    timeInMinutes: 7 * 60 + 17,
     icon: Bus,
     iconColor: "text-yellow-500"
   }
