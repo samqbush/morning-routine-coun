@@ -104,54 +104,75 @@ const SATURDAY_MORNING_ROUTINE: RoutineStep[] = [
   }
 ];
 
-const createEveningRoutine = (includeGameTime: boolean): RoutineStep[] => {
-  const baseRoutine: RoutineStep[] = [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
+const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean): RoutineStep[] => {
+  const baseRoutine: RoutineStep[] = [];
+
+  if (includeKarate) {
+    baseRoutine.push({
+      time: "4:40 PM",
+      activity: "Get Ready for Jack & Sam!",
+      description: "Get Ready for Karate",
+      timeInMinutes: 16 * 60 + 40,
+      icon: () => <div className="text-6xl">🥋</div>,
+      iconColor: "text-orange-500",
+      routineType: 'evening'
+    });
+    baseRoutine.push({
+      time: "4:50 PM",
+      activity: "Karate Time!",
+      description: "Jack & Sam Leave for Karate",
+      timeInMinutes: 16 * 60 + 50,
+      icon: () => <div className="text-6xl">🥋</div>,
       iconColor: "text-red-500",
       routineType: 'evening'
-    },
-    {
-      time: "6:10 PM",
-      activity: "Clean Up Time!",
-      description: "Clear the Table & Tidy Living Room",
-      timeInMinutes: 18 * 60 + 10,
-      icon: () => <div className="text-6xl">🧹</div>,
-      iconColor: "text-amber-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:20 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 20,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:50 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 18 * 60 + 50,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:05 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 5,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    }
-  ];
+    });
+  }
+
+  baseRoutine.push({
+    time: "5:30 PM",
+    activity: "Dinner Time!",
+    description: "Family Dinner Together",
+    timeInMinutes: 17 * 60 + 30,
+    icon: ForkKnife,
+    iconColor: "text-red-500",
+    routineType: 'evening'
+  });
+  baseRoutine.push({
+    time: "6:10 PM",
+    activity: "Clean Up Time!",
+    description: "Clear the Table & Tidy Living Room",
+    timeInMinutes: 18 * 60 + 10,
+    icon: () => <div className="text-6xl">🧹</div>,
+    iconColor: "text-amber-500",
+    routineType: 'evening'
+  });
+  baseRoutine.push({
+    time: "6:20 PM",
+    activity: "Family Activity!",
+    description: "Fun Time Together",
+    timeInMinutes: 18 * 60 + 20,
+    icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+    iconColor: "text-pink-500",
+    routineType: 'evening'
+  });
+  baseRoutine.push({
+    time: "6:50 PM",
+    activity: "Twins Get Ready!",
+    description: "Brush Teeth, Potty & Allergy Medicine",
+    timeInMinutes: 18 * 60 + 50,
+    icon: Pill,
+    iconColor: "text-teal-500",
+    routineType: 'evening'
+  });
+  baseRoutine.push({
+    time: "7:05 PM",
+    activity: "Story Time!",
+    description: "Daddy Reads Books to Twins",
+    timeInMinutes: 19 * 60 + 5,
+    icon: Book,
+    iconColor: "text-indigo-500",
+    routineType: 'evening'
+  });
 
   if (includeGameTime) {
     baseRoutine.push({
@@ -189,13 +210,13 @@ const createEveningRoutine = (includeGameTime: boolean): RoutineStep[] => {
 };
 
 const EVENING_ROUTINES: Record<DayOfWeek, RoutineStep[]> = {
-  Monday: createEveningRoutine(false),
-  Tuesday: createEveningRoutine(true),
-  Wednesday: createEveningRoutine(false),
-  Thursday: createEveningRoutine(false),
-  Friday: createEveningRoutine(true),
-  Saturday: createEveningRoutine(true),
-  Sunday: createEveningRoutine(false)
+  Monday: createEveningRoutine(false, true),
+  Tuesday: createEveningRoutine(true, false),
+  Wednesday: createEveningRoutine(false, true),
+  Thursday: createEveningRoutine(false, false),
+  Friday: createEveningRoutine(true, false),
+  Saturday: createEveningRoutine(true, false),
+  Sunday: createEveningRoutine(false, false)
 };
 
 function App() {
