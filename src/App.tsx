@@ -271,7 +271,7 @@ function App() {
       } else if (stepIndex === -1) {
         message = 'Good night! See you tomorrow morning!';
       } else if (stepIndex >= DAILY_ROUTINE.length) {
-        message = 'Great job! You completed all your routines for today!';
+        message = 'Great job! Now it\'s Sam and Jill time. Mommy and Daddy can relax together!';
       } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
         const activity = DAILY_ROUTINE[stepIndex];
         message = `Time for ${activity.activity}! ${activity.description}`;
@@ -766,8 +766,8 @@ function App() {
             <div className="space-y-8">
               <CheckCircle size={120} className="text-accent mx-auto" />
               <h1 className="text-6xl font-black text-accent">Great Job! 🎉</h1>
-              <p className="text-3xl font-semibold text-muted-foreground">You completed all your routines for today!</p>
-              <p className="text-xl text-muted-foreground">This screen will automatically reset for tomorrow</p>
+              <p className="text-3xl font-semibold text-muted-foreground">Now it's Sam and Jill time!</p>
+              <p className="text-xl text-muted-foreground">Mommy and Daddy can relax together</p>
             </div>
           </Card>
         </div>
