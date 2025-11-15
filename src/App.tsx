@@ -17,7 +17,7 @@ interface RoutineStep {
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-const MORNING_ROUTINE: RoutineStep[] = [
+const WEEKDAY_MORNING_ROUTINE: RoutineStep[] = [
   {
     time: "6:30 AM",
     activity: "Wake Up Time!",
@@ -69,6 +69,36 @@ const MORNING_ROUTINE: RoutineStep[] = [
     description: "Get Shoes On and Get in the Car",
     timeInMinutes: 7 * 60 + 20,
     icon: () => <div className="text-6xl">🚗</div>,
+    iconColor: "text-pink-500",
+    routineType: 'morning'
+  }
+];
+
+const SATURDAY_MORNING_ROUTINE: RoutineStep[] = [
+  {
+    time: "8:00 AM",
+    activity: "Breakfast Time!",
+    description: "Eat Breakfast",
+    timeInMinutes: 8 * 60 + 0,
+    icon: ForkKnife,
+    iconColor: "text-orange-500",
+    routineType: 'morning'
+  },
+  {
+    time: "8:15 AM",
+    activity: "Get Ready!",
+    description: "Get Dressed and Ready",
+    timeInMinutes: 8 * 60 + 15,
+    icon: Backpack,
+    iconColor: "text-purple-500",
+    routineType: 'morning'
+  },
+  {
+    time: "8:30 AM",
+    activity: "Ballet Time!",
+    description: "Go to Ballet for Ava and Dana",
+    timeInMinutes: 8 * 60 + 30,
+    icon: () => <div className="text-6xl">🩰</div>,
     iconColor: "text-pink-500",
     routineType: 'morning'
   }
@@ -193,7 +223,14 @@ function App() {
   const getDailyRoutine = (): RoutineStep[] => {
     const timeToUse = isDebugMode ? debugTime : currentTime;
     const dayOfWeek = getDayOfWeek(timeToUse);
-    const morningRoutine = isSchoolDay(timeToUse) ? MORNING_ROUTINE : [];
+    
+    let morningRoutine: RoutineStep[] = [];
+    if (isSchoolDay(timeToUse)) {
+      morningRoutine = WEEKDAY_MORNING_ROUTINE;
+    } else if (dayOfWeek === 'Saturday') {
+      morningRoutine = SATURDAY_MORNING_ROUTINE;
+    }
+    
     const eveningRoutine = EVENING_ROUTINES[dayOfWeek];
     return [...morningRoutine, ...eveningRoutine];
   };
