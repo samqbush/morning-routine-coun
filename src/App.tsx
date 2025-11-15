@@ -62,402 +62,100 @@ const MORNING_ROUTINE: RoutineStep[] = [
     icon: Bus,
     iconColor: "text-yellow-500",
     routineType: 'morning'
+  },
+  {
+    time: "7:20 AM",
+    activity: "Ava & Dana School Time!",
+    description: "Get Shoes On and Get in the Car",
+    timeInMinutes: 7 * 60 + 20,
+    icon: () => <div className="text-6xl">🚗</div>,
+    iconColor: "text-pink-500",
+    routineType: 'morning'
   }
 ];
 
+const createEveningRoutine = (includeGameTime: boolean): RoutineStep[] => {
+  const baseRoutine: RoutineStep[] = [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:10 PM",
+      activity: "Clean Up Time!",
+      description: "Clear the Table & Tidy Living Room",
+      timeInMinutes: 18 * 60 + 10,
+      icon: () => <div className="text-6xl">🧹</div>,
+      iconColor: "text-amber-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:20 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 20,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:50 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 18 * 60 + 50,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:05 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 5,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    }
+  ];
+
+  if (includeGameTime) {
+    baseRoutine.push({
+      time: "7:15 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 15,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    });
+  }
+
+  baseRoutine.push({
+    time: "8:15 PM",
+    activity: "Jack's Bedtime!",
+    description: "Brush Teeth & Get Ready for Bed",
+    timeInMinutes: 20 * 60 + 15,
+    icon: Moon,
+    iconColor: "text-violet-500",
+    routineType: 'evening'
+  });
+
+  return baseRoutine;
+};
+
 const EVENING_ROUTINES: Record<DayOfWeek, RoutineStep[]> = {
-  Monday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ],
-  Tuesday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ],
-  Wednesday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ],
-  Thursday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ],
-  Friday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ],
-  Saturday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ],
-  Sunday: [
-    {
-      time: "5:30 PM",
-      activity: "Dinner Time!",
-      description: "Family Dinner Together",
-      timeInMinutes: 17 * 60 + 30,
-      icon: ForkKnife,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    },
-    {
-      time: "6:30 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 30,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:00 PM",
-      activity: "Twins Get Ready!",
-      description: "Brush Teeth, Potty & Allergy Medicine",
-      timeInMinutes: 19 * 60 + 0,
-      icon: Pill,
-      iconColor: "text-teal-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:15 PM",
-      activity: "Story Time!",
-      description: "Daddy Reads Books to Twins",
-      timeInMinutes: 19 * 60 + 15,
-      icon: Book,
-      iconColor: "text-indigo-500",
-      routineType: 'evening'
-    },
-    {
-      time: "7:30 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 30,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    },
-    {
-      time: "8:30 PM",
-      activity: "Jack's Bedtime!",
-      description: "Brush Teeth & Get a Book",
-      timeInMinutes: 20 * 60 + 30,
-      icon: Book,
-      iconColor: "text-violet-500",
-      routineType: 'evening'
-    }
-  ]
+  Monday: createEveningRoutine(false),
+  Tuesday: createEveningRoutine(true),
+  Wednesday: createEveningRoutine(false),
+  Thursday: createEveningRoutine(false),
+  Friday: createEveningRoutine(true),
+  Saturday: createEveningRoutine(true),
+  Sunday: createEveningRoutine(false)
 };
 
 function App() {
