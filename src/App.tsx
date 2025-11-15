@@ -145,6 +145,16 @@ const createEveningRoutine = (includeGameTime: boolean): RoutineStep[] => {
     routineType: 'evening'
   });
 
+  baseRoutine.push({
+    time: "8:30 PM",
+    activity: "All Kids Bedtime!",
+    description: "Everyone Should Be in Bed",
+    timeInMinutes: 20 * 60 + 30,
+    icon: Moon,
+    iconColor: "text-indigo-500",
+    routineType: 'evening'
+  });
+
   return baseRoutine;
 };
 
