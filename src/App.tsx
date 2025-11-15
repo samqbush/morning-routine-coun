@@ -464,11 +464,15 @@ function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [debugTime, setDebugTime] = useState(new Date());
-  const [lastStep, setLastStep] = useState<number>(-3); // Track the last step to detect changes
+  const [debugDay, setDebugDay] = useState<DayOfWeek | null>(null);
+  const [lastStep, setLastStep] = useState<number>(-3);
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
 
   const getDayOfWeek = (date: Date): DayOfWeek => {
+    if (isDebugMode && debugDay) {
+      return debugDay;
+    }
     const days: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
   };
@@ -622,34 +626,55 @@ function App() {
   // Debug controls component
   const DebugControls = () => {
     const DAILY_ROUTINE = getDailyRoutine();
+    const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
     return (
     <Card className="p-6 border-2 border-destructive">
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Bug size={24} className="text-destructive" />
-          <h3 className="text-xl font-bold text-destructive">Debug Mode - Test Different Times</h3>
+          <h3 className="text-xl font-bold text-destructive">Debug Mode - Test Different Times & Days</h3>
         </div>
         
         <div className="text-sm text-muted-foreground">
           Current debug time: {(isDebugMode ? debugTime : currentTime).toLocaleTimeString()}
+          {debugDay && <span className="ml-2 font-semibold">({debugDay})</span>}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
-            Before Start (6:15 AM)
-          </Button>
-          {DAILY_ROUTINE.map((step, index) => (
-            <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
-              {step.time} - {step.activity}
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold">Select Day of Week:</h4>
+          <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+            {days.map((day) => (
+              <Button 
+                key={day}
+                size="sm" 
+                variant={debugDay === day ? "default" : "outline"}
+                onClick={() => setDebugDay(day)}
+              >
+                {day.slice(0, 3)}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold">Jump to Activity:</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
+              Before Start (6:15 AM)
             </Button>
-          ))}
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
-            Finished (9:00 PM)
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
-            Late Night (10:00 PM)
-          </Button>
+            {DAILY_ROUTINE.map((step, index) => (
+              <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
+                {step.time} - {step.activity}
+              </Button>
+            ))}
+            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
+              Finished (9:00 PM)
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
+              Late Night (10:00 PM)
+            </Button>
+          </div>
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -659,6 +684,7 @@ function App() {
             onClick={() => {
               setIsDebugMode(false);
               setDebugTime(new Date());
+              setDebugDay(null);
             }}
           >
             Exit Debug Mode
@@ -840,19 +866,21 @@ function App() {
 
   if (currentStep === -1) {
     const timeToUse = isDebugMode ? debugTime : currentTime;
-    const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6; // Until 6 AM tomorrow
-    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 30; // Until 6:30 AM
+    const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6;
+    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 30;
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
-        {/* Debug Mode Toggle */}
         {!isDebugMode && (
           <div className="fixed top-4 right-4 z-50">
             <Button
               size="sm"
               variant="outline"
               onClick={() => {
-                initializeAudio(); // Initialize audio on user interaction
+                initializeAudio();
                 setIsDebugMode(true);
+                if (!debugDay) {
+                  setDebugDay(getDayOfWeek(currentTime));
+                }
               }}
               className="gap-2"
             >
@@ -863,7 +891,6 @@ function App() {
         )}
 
         <div className="w-full max-w-4xl space-y-8">
-          {/* Debug Controls */}
           {isDebugMode && <DebugControls />}
           
           <Card className="p-12 text-center">
@@ -898,6 +925,9 @@ function App() {
                 onClick={() => {
                   initializeAudio();
                   setIsDebugMode(true);
+                  if (!debugDay) {
+                    setDebugDay(getDayOfWeek(currentTime));
+                  }
                 }}
                 className="gap-2"
               >
@@ -932,6 +962,9 @@ function App() {
               onClick={() => {
                 initializeAudio();
                 setIsDebugMode(true);
+                if (!debugDay) {
+                  setDebugDay(getDayOfWeek(currentTime));
+                }
               }}
               className="gap-2"
             >
@@ -1006,6 +1039,9 @@ function App() {
               onClick={() => {
                 initializeAudio();
                 setIsDebugMode(true);
+                if (!debugDay) {
+                  setDebugDay(getDayOfWeek(currentTime));
+                }
               }}
               className="gap-2"
             >
@@ -1044,15 +1080,17 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Debug Mode Toggle */}
         {!isDebugMode && (
           <div className="fixed top-4 right-4 z-50">
             <Button
               size="sm"
               variant="outline"
               onClick={() => {
-                initializeAudio(); // Initialize audio on user interaction
+                initializeAudio();
                 setIsDebugMode(true);
+                if (!debugDay) {
+                  setDebugDay(getDayOfWeek(currentTime));
+                }
               }}
               className="gap-2"
             >
