@@ -15,7 +15,9 @@ interface RoutineStep {
   routineType: 'morning' | 'evening';
 }
 
-const DAILY_ROUTINE: RoutineStep[] = [
+type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
+const MORNING_ROUTINE: RoutineStep[] = [
   {
     time: "6:30 AM",
     activity: "Wake Up Time!",
@@ -60,62 +62,403 @@ const DAILY_ROUTINE: RoutineStep[] = [
     icon: Bus,
     iconColor: "text-yellow-500",
     routineType: 'morning'
-  },
-  {
-    time: "5:30 PM",
-    activity: "Dinner Time!",
-    description: "Family Dinner Together",
-    timeInMinutes: 17 * 60 + 30,
-    icon: ForkKnife,
-    iconColor: "text-red-500",
-    routineType: 'evening'
-  },
-  {
-    time: "6:30 PM",
-    activity: "Family Activity!",
-    description: "Fun Time Together",
-    timeInMinutes: 18 * 60 + 30,
-    icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-    iconColor: "text-pink-500",
-    routineType: 'evening'
-  },
-  {
-    time: "7:00 PM",
-    activity: "Twins Get Ready!",
-    description: "Brush Teeth, Potty & Allergy Medicine",
-    timeInMinutes: 19 * 60 + 0,
-    icon: Pill,
-    iconColor: "text-teal-500",
-    routineType: 'evening'
-  },
-  {
-    time: "7:15 PM",
-    activity: "Story Time!",
-    description: "Daddy Reads Books to Twins",
-    timeInMinutes: 19 * 60 + 15,
-    icon: Book,
-    iconColor: "text-indigo-500",
-    routineType: 'evening'
-  },
-  {
-    time: "7:30 PM",
-    activity: "Game Time!",
-    description: "Jack & Daddy Play Video Games",
-    timeInMinutes: 19 * 60 + 30,
-    icon: GameController,
-    iconColor: "text-green-500",
-    routineType: 'evening'
-  },
-  {
-    time: "8:30 PM",
-    activity: "Jack's Bedtime!",
-    description: "Brush Teeth & Get a Book",
-    timeInMinutes: 20 * 60 + 30,
-    icon: Book,
-    iconColor: "text-violet-500",
-    routineType: 'evening'
   }
 ];
+
+const EVENING_ROUTINES: Record<DayOfWeek, RoutineStep[]> = {
+  Monday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ],
+  Tuesday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ],
+  Wednesday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ],
+  Thursday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ],
+  Friday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ],
+  Saturday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ],
+  Sunday: [
+    {
+      time: "5:30 PM",
+      activity: "Dinner Time!",
+      description: "Family Dinner Together",
+      timeInMinutes: 17 * 60 + 30,
+      icon: ForkKnife,
+      iconColor: "text-red-500",
+      routineType: 'evening'
+    },
+    {
+      time: "6:30 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 30,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:00 PM",
+      activity: "Twins Get Ready!",
+      description: "Brush Teeth, Potty & Allergy Medicine",
+      timeInMinutes: 19 * 60 + 0,
+      icon: Pill,
+      iconColor: "text-teal-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:15 PM",
+      activity: "Story Time!",
+      description: "Daddy Reads Books to Twins",
+      timeInMinutes: 19 * 60 + 15,
+      icon: Book,
+      iconColor: "text-indigo-500",
+      routineType: 'evening'
+    },
+    {
+      time: "7:30 PM",
+      activity: "Game Time!",
+      description: "Jack & Daddy Play Video Games",
+      timeInMinutes: 19 * 60 + 30,
+      icon: GameController,
+      iconColor: "text-green-500",
+      routineType: 'evening'
+    },
+    {
+      time: "8:30 PM",
+      activity: "Jack's Bedtime!",
+      description: "Brush Teeth & Get a Book",
+      timeInMinutes: 20 * 60 + 30,
+      icon: Book,
+      iconColor: "text-violet-500",
+      routineType: 'evening'
+    }
+  ]
+};
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -124,6 +467,24 @@ function App() {
   const [lastStep, setLastStep] = useState<number>(-3); // Track the last step to detect changes
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+
+  const getDayOfWeek = (date: Date): DayOfWeek => {
+    const days: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+  };
+
+  const isSchoolDay = (date: Date): boolean => {
+    const day = getDayOfWeek(date);
+    return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day);
+  };
+
+  const getDailyRoutine = (): RoutineStep[] => {
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    const dayOfWeek = getDayOfWeek(timeToUse);
+    const morningRoutine = isSchoolDay(timeToUse) ? MORNING_ROUTINE : [];
+    const eveningRoutine = EVENING_ROUTINES[dayOfWeek];
+    return [...morningRoutine, ...eveningRoutine];
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -188,10 +549,10 @@ function App() {
     if (!speechEnabled || !('speechSynthesis' in window)) return;
     
     try {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
       let message = '';
+      const DAILY_ROUTINE = getDailyRoutine();
       
       if (stepIndex === -2) {
         message = 'Good morning! Get ready to start your routine!';
@@ -210,7 +571,6 @@ function App() {
         utterance.pitch = 1.1;
         utterance.volume = 0.8;
         
-        // Use a pleasant voice if available
         const voices = window.speechSynthesis.getVoices();
         const preferredVoice = voices.find(voice => 
           voice.name.includes('Samantha') || 
@@ -230,31 +590,28 @@ function App() {
   };
 
   const setDebugTimeToStep = (stepIndex: number) => {
-    initializeAudio(); // Initialize audio when using debug controls
+    initializeAudio();
+    
+    const DAILY_ROUTINE = getDailyRoutine();
     
     if (stepIndex === -1) {
-      // Set to 10 PM (waiting for tomorrow)
       const newTime = new Date();
       newTime.setHours(22, 0, 0, 0);
       setDebugTime(newTime);
     } else if (stepIndex === -2) {
-      // Set to 6:15 AM (before routine starts)
       const newTime = new Date();
       newTime.setHours(6, 15, 0, 0);
       setDebugTime(newTime);
     } else if (stepIndex >= DAILY_ROUTINE.length) {
-      // Set to after routine is done (9:00 PM)
       const newTime = new Date();
       newTime.setHours(21, 0, 0, 0);
       setDebugTime(newTime);
     } else {
-      // Set to the exact step time
       const stepTime = DAILY_ROUTINE[stepIndex].timeInMinutes;
       const newTime = new Date();
       newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
       setDebugTime(newTime);
       
-      // Play sound when jumping to a new step in debug mode
       setTimeout(() => {
         playStepChangeSound();
         announceActivity(stepIndex);
@@ -263,7 +620,10 @@ function App() {
   };
 
   // Debug controls component
-  const DebugControls = () => (
+  const DebugControls = () => {
+    const DAILY_ROUTINE = getDailyRoutine();
+    
+    return (
     <Card className="p-6 border-2 border-destructive">
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -333,7 +693,7 @@ function App() {
         </div>
       </div>
     </Card>
-  );
+  );};
 
   const getCurrentTimeInMinutes = () => {
     const timeToUse = isDebugMode ? debugTime : currentTime;
@@ -342,41 +702,37 @@ function App() {
 
   const getCurrentStep = () => {
     const timeInMinutes = getCurrentTimeInMinutes();
+    const DAILY_ROUTINE = getDailyRoutine();
     
-    // If it's late in the day (after 9 PM), automatically reset for next day
     if (timeInMinutes > 21 * 60) {
-      return -1; // Special case for "waiting for tomorrow"
+      return -1;
     }
     
-    // Find which step we're currently in
-    // If we haven't reached the first step, return -2 (waiting to start)
-    if (timeInMinutes < DAILY_ROUTINE[0].timeInMinutes) {
+    if (DAILY_ROUTINE.length === 0 || timeInMinutes < DAILY_ROUTINE[0].timeInMinutes) {
       return -2;
     }
     
-    // Find the current active step - the last step whose time has passed
     for (let i = DAILY_ROUTINE.length - 1; i >= 0; i--) {
       if (timeInMinutes >= DAILY_ROUTINE[i].timeInMinutes) {
-        // Check if we're still within this step's duration
         const nextStepTime = i + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[i + 1].timeInMinutes : DAILY_ROUTINE[i].timeInMinutes + 15;
         if (timeInMinutes < nextStepTime) {
           console.log(`Current time: ${timeInMinutes}, Step ${i} (${DAILY_ROUTINE[i].time}) - ${DAILY_ROUTINE[i].activity}`);
-          return i; // We're currently in this step
+          return i;
         }
       }
     }
     
-    return DAILY_ROUTINE.length; // All steps completed
+    return DAILY_ROUTINE.length;
   };
 
   const getTimeUntilNextStep = () => {
     const currentStep = getCurrentStep();
+    const DAILY_ROUTINE = getDailyRoutine();
     
-    // Handle special cases
     if (currentStep === -2) {
-      // Waiting for routine to start
       const timeToUse = isDebugMode ? debugTime : currentTime;
       const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
+      if (DAILY_ROUTINE.length === 0) return 0;
       const firstStepTimeInSeconds = DAILY_ROUTINE[0].timeInMinutes * 60;
       return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
     }
@@ -385,11 +741,9 @@ function App() {
       return 0;
     }
     
-    // Time remaining in current step
     const timeToUse = isDebugMode ? debugTime : currentTime;
     const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
     
-    // Calculate when this step ends (next step starts, or +15 minutes for last step)
     const nextStepTime = currentStep + 1 < DAILY_ROUTINE.length 
       ? DAILY_ROUTINE[currentStep + 1].timeInMinutes 
       : DAILY_ROUTINE[currentStep].timeInMinutes + 15;
@@ -411,8 +765,8 @@ function App() {
     if (currentStep < 0) return 0;
     
     const timeInMinutes = getCurrentTimeInMinutes();
+    const DAILY_ROUTINE = getDailyRoutine();
     
-    // Count completed steps (steps where their end time has passed)
     let completedSteps = 0;
     for (let i = 0; i < DAILY_ROUTINE.length; i++) {
       const nextStepTime = i + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[i + 1].timeInMinutes : DAILY_ROUTINE[i].timeInMinutes + 15;
@@ -429,26 +783,26 @@ function App() {
 
   const getStepDuration = () => {
     const currentStep = getCurrentStep();
+    const DAILY_ROUTINE = getDailyRoutine();
     
     if (currentStep === -2) {
-      // Duration until first step starts
       const timeToUse = isDebugMode ? debugTime : currentTime;
       const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
+      if (DAILY_ROUTINE.length === 0) return 300;
       const firstStepTimeInSeconds = DAILY_ROUTINE[0].timeInMinutes * 60;
       return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
     }
     
     if (currentStep < 0 || currentStep >= DAILY_ROUTINE.length) {
-      return 300; // Default 5 minutes for edge cases
+      return 300;
     }
     
-    // Duration of current step
     const nextStepTime = currentStep + 1 < DAILY_ROUTINE.length 
       ? DAILY_ROUTINE[currentStep + 1].timeInMinutes 
       : DAILY_ROUTINE[currentStep].timeInMinutes + 15;
     
     const stepDurationInMinutes = nextStepTime - DAILY_ROUTINE[currentStep].timeInMinutes;
-    return stepDurationInMinutes * 60; // Convert to seconds
+    return stepDurationInMinutes * 60;
   };
 
   // Get color based on time remaining percentage
@@ -472,11 +826,10 @@ function App() {
   const currentStep = getCurrentStep();
   const timeRemaining = getTimeUntilNextStep();
   const progressPercentage = getProgressPercentage();
+  const DAILY_ROUTINE = getDailyRoutine();
 
-  // Detect step changes and play sound + voice announcement
   useEffect(() => {
     if (currentStep !== lastStep) {
-      // Only play sound and announce for actual step changes (not initial load)
       if (lastStep >= -3 && lastStep !== currentStep) {
         playStepChangeSound();
         announceActivity(currentStep);
@@ -485,7 +838,6 @@ function App() {
     }
   }, [currentStep, lastStep]);
 
-  // Late in day case - show waiting for tomorrow
   if (currentStep === -1) {
     const timeToUse = isDebugMode ? debugTime : currentTime;
     const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6; // Until 6 AM tomorrow
@@ -529,19 +881,56 @@ function App() {
     );
   }
 
-  // Early morning case - automatically show waiting screen
   if (currentStep === -2) {
     const timeUntilStart = getTimeUntilNextStep();
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    const isWeekend = !isSchoolDay(timeToUse);
+    const dayOfWeek = getDayOfWeek(timeToUse);
+    
+    if (isWeekend && DAILY_ROUTINE.length > 0 && timeUntilStart > 0) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
+          {!isDebugMode && (
+            <div className="fixed top-4 right-4 z-50">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  initializeAudio();
+                  setIsDebugMode(true);
+                }}
+                className="gap-2"
+              >
+                <Bug size={16} />
+                Test Mode
+              </Button>
+            </div>
+          )}
+
+          <div className="w-full max-w-4xl space-y-8">
+            {isDebugMode && <DebugControls />}
+            
+            <Card className="p-12 text-center">
+              <div className="space-y-8">
+                <h1 className="text-6xl font-black text-primary">Happy {dayOfWeek}! 🎉</h1>
+                <p className="text-3xl font-semibold text-muted-foreground">No school today - enjoy your weekend!</p>
+                <p className="text-2xl text-muted-foreground">Evening routine starts at 5:30 PM</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
-        {/* Debug Mode Toggle */}
         {!isDebugMode && (
           <div className="fixed top-4 right-4 z-50">
             <Button
               size="sm"
               variant="outline"
               onClick={() => {
-                initializeAudio(); // Initialize audio on user interaction
+                initializeAudio();
                 setIsDebugMode(true);
               }}
               className="gap-2"
@@ -553,7 +942,6 @@ function App() {
         )}
 
         <div className="w-full max-w-4xl space-y-8">
-          {/* Debug Controls */}
           {isDebugMode && <DebugControls />}
           
           <Card className="p-12 text-center">
@@ -561,9 +949,7 @@ function App() {
               <h1 className="text-6xl font-black text-primary">Good Morning! 🌅</h1>
               <p className="text-3xl font-semibold text-muted-foreground">Get Ready to Start Your Routine!</p>
               
-              {/* Visual Timer Ring for Pre-Routine */}
               <div className="relative w-64 h-64 mx-auto">
-                {/* Background circle */}
                 <svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 256 256">
                   <circle
                     cx="128"
@@ -574,7 +960,6 @@ function App() {
                     fill="none"
                     className="text-muted/30"
                   />
-                  {/* Progress circle */}
                   <circle
                     cx="128"
                     cy="128"
@@ -589,7 +974,6 @@ function App() {
                   />
                 </svg>
                 
-                {/* Center content */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-6xl mb-2">⏰</div>
@@ -611,18 +995,16 @@ function App() {
     );
   }
 
-  // All done case - automatically reset after 10 minutes
   if (currentStep >= DAILY_ROUTINE.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
-        {/* Debug Mode Toggle */}
         {!isDebugMode && (
           <div className="fixed top-4 right-4 z-50">
             <Button
               size="sm"
               variant="outline"
               onClick={() => {
-                initializeAudio(); // Initialize audio on user interaction
+                initializeAudio();
                 setIsDebugMode(true);
               }}
               className="gap-2"
@@ -634,7 +1016,6 @@ function App() {
         )}
 
         <div className="w-full max-w-4xl space-y-8">
-          {/* Debug Controls */}
           {isDebugMode && <DebugControls />}
           
           <Card className="p-12 text-center">
@@ -650,9 +1031,7 @@ function App() {
     );
   }
 
-  // Ensure we have a valid current step
   if (currentStep < 0 || currentStep >= DAILY_ROUTINE.length) {
-    // This shouldn't happen with our logic, but safety check
     return null;
   }
 
