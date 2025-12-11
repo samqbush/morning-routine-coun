@@ -80,6 +80,15 @@ const WEEKDAY_MORNING_ROUTINE: RoutineStep[] = [
     icon: () => <div className="text-6xl">🚗</div>,
     iconColor: "text-pink-500",
     routineType: 'morning'
+  },
+  {
+    time: "7:35 AM",
+    activity: "Morning Complete!",
+    description: "Time for a Break",
+    timeInMinutes: 7 * 60 + 35,
+    icon: CheckCircle,
+    iconColor: "text-green-500",
+    routineType: 'morning'
   }
 ];
 
@@ -391,9 +400,18 @@ function App() {
       newTime.setHours(6, 15, 0, 0);
       setDebugTime(newTime);
     } else if (stepIndex === -3) {
-      const newTime = new Date();
-      newTime.setHours(10, 0, 0, 0);
-      setDebugTime(newTime);
+      const morningSteps = DAILY_ROUTINE.filter(step => step.routineType === 'morning');
+      if (morningSteps.length > 0) {
+        const lastMorningStep = morningSteps[morningSteps.length - 1];
+        const lastMorningStepIndex = DAILY_ROUTINE.findIndex(step => step === lastMorningStep);
+        const breakStartTime = lastMorningStepIndex + 1 < DAILY_ROUTINE.length 
+          ? DAILY_ROUTINE[lastMorningStepIndex + 1].timeInMinutes 
+          : lastMorningStep.timeInMinutes + 5;
+        
+        const newTime = new Date();
+        newTime.setHours(Math.floor(breakStartTime / 60), breakStartTime % 60, 0, 0);
+        setDebugTime(newTime);
+      }
     } else if (stepIndex >= DAILY_ROUTINE.length) {
       const newTime = new Date();
       newTime.setHours(21, 0, 0, 0);
@@ -457,7 +475,7 @@ function App() {
               </Button>
             ))}
             <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-3)}>
-              Break Time (10:00 AM)
+              Break Time (After Morning)
             </Button>
             <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
               Finished (9:00 PM)
@@ -536,9 +554,16 @@ function App() {
       const lastMorningStep = morningSteps[morningSteps.length - 1];
       const firstEveningStep = eveningSteps[0];
       
-      const morningEndTime = lastMorningStep.timeInMinutes + 5;
-      
-      if (timeInMinutes >= morningEndTime && timeInMinutes < firstEveningStep.timeInMinutes) {
+      if (timeInMinutes >= lastMorningStep.timeInMinutes && timeInMinutes < firstEveningStep.timeInMinutes) {
+        const lastMorningStepIndex = DAILY_ROUTINE.findIndex(step => step === lastMorningStep);
+        const nextStepTime = lastMorningStepIndex + 1 < DAILY_ROUTINE.length 
+          ? DAILY_ROUTINE[lastMorningStepIndex + 1].timeInMinutes 
+          : lastMorningStep.timeInMinutes + 5;
+        
+        if (timeInMinutes < nextStepTime) {
+          return lastMorningStepIndex;
+        }
+        
         return -3;
       }
     }
@@ -678,6 +703,8 @@ function App() {
     if (firstEveningStep) {
       const currentTimeInMinutes = timeToUse.getHours() * 60 + timeToUse.getMinutes();
       const minutesUntilEvening = firstEveningStep.timeInMinutes - currentTimeInMinutes;
+      const hoursUntilEvening = Math.floor(minutesUntilEvening / 60);
+      const remainingMinutes = minutesUntilEvening % 60;
       
       return (
         <div className="min-h-screen bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center p-8">
@@ -710,9 +737,9 @@ function App() {
                 <h1 className="text-6xl font-black text-accent">Morning Routine Complete! 🎉</h1>
                 <p className="text-3xl font-semibold text-muted-foreground">Great job getting ready for school!</p>
                 <div className="text-5xl font-black text-primary mt-8">
-                  {Math.floor(minutesUntilEvening / 60)}h {minutesUntilEvening % 60}m
+                  {hoursUntilEvening}h {remainingMinutes}m
                 </div>
-                <p className="text-2xl text-muted-foreground">until evening routine starts</p>
+                <p className="text-2xl text-muted-foreground">until evening routine starts at {firstEveningStep.time}</p>
               </div>
             </Card>
           </div>
