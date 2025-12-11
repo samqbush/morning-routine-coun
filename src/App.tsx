@@ -20,44 +20,44 @@ type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'S
 const WEEKDAY_MORNING_ROUTINE: RoutineStep[] = [
   {
     time: "6:30 AM",
-    activity: "Wake Up Time!",
-    description: "Brush Teeth & Potty",
+    activity: "Jack Wake Up!",
+    description: "Jack: Brush Teeth & Potty",
     timeInMinutes: 6 * 60 + 30,
     icon: Toilet,
     iconColor: "text-blue-500",
     routineType: 'morning'
   },
   {
-    time: "6:50 AM",
-    activity: "Breakfast Time!",
-    description: "Quick Breakfast of Pancakes & Sausage",
-    timeInMinutes: 6 * 60 + 50,
+    time: "6:40 AM",
+    activity: "Jack Breakfast Time!",
+    description: "Jack: Eat Breakfast",
+    timeInMinutes: 6 * 60 + 40,
     icon: ForkKnife,
     iconColor: "text-orange-500",
     routineType: 'morning'
   },
   {
-    time: "7:05 AM",
-    activity: "Pack Snacks!",
-    description: "Fill Water Bottles and Choose Snacks",
-    timeInMinutes: 7 * 60 + 5,
-    icon: () => <div className="text-6xl">🥤</div>,
-    iconColor: "text-cyan-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:10 AM",
-    activity: "Get Ready!",
-    description: "Put on Shoes and Backpack",
-    timeInMinutes: 7 * 60 + 10,
+    time: "7:00 AM",
+    activity: "Jack Get Ready!",
+    description: "Jack: Pack Snacks, Water, Put on Shoes",
+    timeInMinutes: 7 * 60 + 0,
     icon: Backpack,
     iconColor: "text-purple-500",
     routineType: 'morning'
   },
   {
+    time: "7:05 AM",
+    activity: "Ava & Dana Wake Up!",
+    description: "Ava & Dana: Brush Teeth & Potty",
+    timeInMinutes: 7 * 60 + 5,
+    icon: Toilet,
+    iconColor: "text-blue-500",
+    routineType: 'morning'
+  },
+  {
     time: "7:17 AM",
-    activity: "School Time!",
-    description: "Leave for School Bus",
+    activity: "Jack School Time!",
+    description: "Jack: Leave for School Bus",
     timeInMinutes: 7 * 60 + 17,
     icon: Bus,
     iconColor: "text-yellow-500",
@@ -65,9 +65,18 @@ const WEEKDAY_MORNING_ROUTINE: RoutineStep[] = [
   },
   {
     time: "7:20 AM",
-    activity: "Ava & Dana School Time!",
-    description: "Get Shoes On and Get in the Car",
+    activity: "Ava Finish Breakfast!",
+    description: "Ava: Finish Eating Breakfast",
     timeInMinutes: 7 * 60 + 20,
+    icon: ForkKnife,
+    iconColor: "text-orange-500",
+    routineType: 'morning'
+  },
+  {
+    time: "7:30 AM",
+    activity: "Ava & Dana School Time!",
+    description: "Get in the Car - Leaving in 5 Minutes!",
+    timeInMinutes: 7 * 60 + 30,
     icon: () => <div className="text-6xl">🚗</div>,
     iconColor: "text-pink-500",
     routineType: 'morning'
@@ -128,6 +137,15 @@ const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean):
     });
   }
 
+  baseRoutine.push({
+    time: "5:00 PM",
+    activity: "Get Ready for Dinner!",
+    description: "Dinner in 30 Minutes",
+    timeInMinutes: 17 * 60 + 0,
+    icon: Clock,
+    iconColor: "text-amber-500",
+    routineType: 'evening'
+  });
   baseRoutine.push({
     time: "5:30 PM",
     activity: "Dinner Time!",
@@ -372,6 +390,10 @@ function App() {
       const newTime = new Date();
       newTime.setHours(6, 15, 0, 0);
       setDebugTime(newTime);
+    } else if (stepIndex === -3) {
+      const newTime = new Date();
+      newTime.setHours(10, 0, 0, 0);
+      setDebugTime(newTime);
     } else if (stepIndex >= DAILY_ROUTINE.length) {
       const newTime = new Date();
       newTime.setHours(21, 0, 0, 0);
@@ -434,6 +456,9 @@ function App() {
                 {step.time} - {step.activity}
               </Button>
             ))}
+            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-3)}>
+              Break Time (10:00 AM)
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
               Finished (9:00 PM)
             </Button>
@@ -502,6 +527,20 @@ function App() {
     
     if (DAILY_ROUTINE.length === 0 || timeInMinutes < DAILY_ROUTINE[0].timeInMinutes) {
       return -2;
+    }
+    
+    const morningSteps = DAILY_ROUTINE.filter(step => step.routineType === 'morning');
+    const eveningSteps = DAILY_ROUTINE.filter(step => step.routineType === 'evening');
+    
+    if (morningSteps.length > 0 && eveningSteps.length > 0) {
+      const lastMorningStep = morningSteps[morningSteps.length - 1];
+      const firstEveningStep = eveningSteps[0];
+      
+      const morningEndTime = lastMorningStep.timeInMinutes + 5;
+      
+      if (timeInMinutes >= morningEndTime && timeInMinutes < firstEveningStep.timeInMinutes) {
+        return -3;
+      }
     }
     
     for (let i = DAILY_ROUTINE.length - 1; i >= 0; i--) {
@@ -629,6 +668,58 @@ function App() {
       setLastStep(currentStep);
     }
   }, [currentStep, lastStep]);
+
+  if (currentStep === -3) {
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    const DAILY_ROUTINE = getDailyRoutine();
+    const eveningSteps = DAILY_ROUTINE.filter(step => step.routineType === 'evening');
+    const firstEveningStep = eveningSteps[0];
+    
+    if (firstEveningStep) {
+      const currentTimeInMinutes = timeToUse.getHours() * 60 + timeToUse.getMinutes();
+      const minutesUntilEvening = firstEveningStep.timeInMinutes - currentTimeInMinutes;
+      
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center p-8">
+          {!isDebugMode && (
+            <div className="fixed top-4 right-4 z-50">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  initializeAudio();
+                  setIsDebugMode(true);
+                  if (!debugDay) {
+                    setDebugDay(getDayOfWeek(currentTime));
+                  }
+                }}
+                className="gap-2"
+              >
+                <Bug size={16} />
+                Test Mode
+              </Button>
+            </div>
+          )}
+
+          <div className="w-full max-w-4xl space-y-8">
+            {isDebugMode && <DebugControls />}
+            
+            <Card className="p-12 text-center">
+              <div className="space-y-8">
+                <CheckCircle size={120} className="text-accent mx-auto" />
+                <h1 className="text-6xl font-black text-accent">Morning Routine Complete! 🎉</h1>
+                <p className="text-3xl font-semibold text-muted-foreground">Great job getting ready for school!</p>
+                <div className="text-5xl font-black text-primary mt-8">
+                  {Math.floor(minutesUntilEvening / 60)}h {minutesUntilEvening % 60}m
+                </div>
+                <p className="text-2xl text-muted-foreground">until evening routine starts</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+  }
 
   if (currentStep === -1) {
     const timeToUse = isDebugMode ? debugTime : currentTime;
