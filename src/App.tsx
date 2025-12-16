@@ -122,7 +122,7 @@ const SATURDAY_MORNING_ROUTINE: RoutineStep[] = [
   }
 ];
 
-const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean): RoutineStep[] => {
+const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean, isBathDay: boolean, isWeeknight: boolean): RoutineStep[] => {
   const baseRoutine: RoutineStep[] = [];
 
   if (includeKarate) {
@@ -173,15 +173,41 @@ const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean):
     iconColor: "text-amber-500",
     routineType: 'evening'
   });
-  baseRoutine.push({
-    time: "6:20 PM",
-    activity: "Family Activity!",
-    description: "Fun Time Together",
-    timeInMinutes: 18 * 60 + 20,
-    icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-    iconColor: "text-pink-500",
-    routineType: 'evening'
-  });
+  
+  if (isWeeknight) {
+    baseRoutine.push({
+      time: "6:15 PM",
+      activity: "Pick Your Outfit!",
+      description: "Twins Choose Tomorrow's School Clothes",
+      timeInMinutes: 18 * 60 + 15,
+      icon: () => <div className="text-6xl">👕</div>,
+      iconColor: "text-purple-500",
+      routineType: 'evening'
+    });
+  }
+  
+  if (isBathDay) {
+    baseRoutine.push({
+      time: "6:20 PM",
+      activity: "Bath Time!",
+      description: "Take Baths",
+      timeInMinutes: 18 * 60 + 20,
+      icon: () => <div className="text-6xl">🛁</div>,
+      iconColor: "text-blue-500",
+      routineType: 'evening'
+    });
+  } else {
+    baseRoutine.push({
+      time: "6:20 PM",
+      activity: "Family Activity!",
+      description: "Fun Time Together",
+      timeInMinutes: 18 * 60 + 20,
+      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
+      iconColor: "text-pink-500",
+      routineType: 'evening'
+    });
+  }
+  
   baseRoutine.push({
     time: "6:50 PM",
     activity: "Twins Get Ready!",
@@ -237,13 +263,13 @@ const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean):
 };
 
 const EVENING_ROUTINES: Record<DayOfWeek, RoutineStep[]> = {
-  Monday: createEveningRoutine(false, true),
-  Tuesday: createEveningRoutine(true, false),
-  Wednesday: createEveningRoutine(false, true),
-  Thursday: createEveningRoutine(false, false),
-  Friday: createEveningRoutine(true, false),
-  Saturday: createEveningRoutine(true, false),
-  Sunday: createEveningRoutine(false, false)
+  Monday: createEveningRoutine(false, true, true, true),
+  Tuesday: createEveningRoutine(true, false, false, true),
+  Wednesday: createEveningRoutine(false, true, true, true),
+  Thursday: createEveningRoutine(false, false, false, true),
+  Friday: createEveningRoutine(true, false, true, true),
+  Saturday: createEveningRoutine(true, false, false, false),
+  Sunday: createEveningRoutine(false, false, false, false)
 };
 
 function App() {
