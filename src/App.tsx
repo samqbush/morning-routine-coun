@@ -3,274 +3,20 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Bug, Toilet, ForkKnife, Backpack, Bus, SpeakerHigh, SpeakerX, Moon, GameController, Book, Pill } from '@phosphor-icons/react';
-
-interface RoutineStep {
-  time: string;
-  activity: string;
-  description: string;
-  timeInMinutes: number;
-  icon: React.ComponentType<any>;
-  iconColor: string;
-  routineType: 'morning' | 'evening';
-}
+import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX } from '@phosphor-icons/react';
+import { loadRoutines, RoutineStep } from '@/lib/routineLoader';
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-const WEEKDAY_MORNING_ROUTINE: RoutineStep[] = [
-  {
-    time: "6:30 AM",
-    activity: "Jack Wake Up!",
-    description: "Jack: Brush Teeth & Potty",
-    timeInMinutes: 6 * 60 + 30,
-    icon: Toilet,
-    iconColor: "text-blue-500",
-    routineType: 'morning'
-  },
-  {
-    time: "6:40 AM",
-    activity: "Jack Breakfast Time!",
-    description: "Jack: Eat Breakfast",
-    timeInMinutes: 6 * 60 + 40,
-    icon: ForkKnife,
-    iconColor: "text-orange-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:00 AM",
-    activity: "Jack Get Ready!",
-    description: "Jack: Pack Snacks, Water, Put on Shoes",
-    timeInMinutes: 7 * 60 + 0,
-    icon: Backpack,
-    iconColor: "text-purple-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:05 AM",
-    activity: "Ava & Dana Wake Up!",
-    description: "Ava & Dana: Brush Teeth & Potty",
-    timeInMinutes: 7 * 60 + 5,
-    icon: Toilet,
-    iconColor: "text-blue-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:17 AM",
-    activity: "Jack School Time!",
-    description: "Jack: Leave for School Bus",
-    timeInMinutes: 7 * 60 + 17,
-    icon: Bus,
-    iconColor: "text-yellow-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:20 AM",
-    activity: "Ava Finish Breakfast!",
-    description: "Ava: Finish Eating Breakfast",
-    timeInMinutes: 7 * 60 + 20,
-    icon: ForkKnife,
-    iconColor: "text-orange-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:30 AM",
-    activity: "Ava & Dana School Time!",
-    description: "Get in the Car - Leaving in 5 Minutes!",
-    timeInMinutes: 7 * 60 + 30,
-    icon: () => <div className="text-6xl">🚗</div>,
-    iconColor: "text-pink-500",
-    routineType: 'morning'
-  },
-  {
-    time: "7:35 AM",
-    activity: "Morning Complete!",
-    description: "Time for a Break",
-    timeInMinutes: 7 * 60 + 35,
-    icon: CheckCircle,
-    iconColor: "text-green-500",
-    routineType: 'morning'
-  }
-];
+// Load routines from config at app startup
+let loadedRoutines: ReturnType<typeof loadRoutines> | null = null;
+let routinesError: Error | null = null;
 
-const SATURDAY_MORNING_ROUTINE: RoutineStep[] = [
-  {
-    time: "8:00 AM",
-    activity: "Breakfast Time!",
-    description: "Eat Breakfast",
-    timeInMinutes: 8 * 60 + 0,
-    icon: ForkKnife,
-    iconColor: "text-orange-500",
-    routineType: 'morning'
-  },
-  {
-    time: "8:15 AM",
-    activity: "Get Ready!",
-    description: "Get Dressed and Ready",
-    timeInMinutes: 8 * 60 + 15,
-    icon: Backpack,
-    iconColor: "text-purple-500",
-    routineType: 'morning'
-  },
-  {
-    time: "8:30 AM",
-    activity: "Ballet Time!",
-    description: "Go to Ballet for Ava and Dana",
-    timeInMinutes: 8 * 60 + 30,
-    icon: () => <div className="text-6xl">🩰</div>,
-    iconColor: "text-pink-500",
-    routineType: 'morning'
-  }
-];
-
-const createEveningRoutine = (includeGameTime: boolean, includeKarate: boolean, isBathDay: boolean, isWeeknight: boolean): RoutineStep[] => {
-  const baseRoutine: RoutineStep[] = [];
-
-  if (includeKarate) {
-    baseRoutine.push({
-      time: "4:40 PM",
-      activity: "Get Ready for Jack & Sam!",
-      description: "Get Ready for Karate",
-      timeInMinutes: 16 * 60 + 40,
-      icon: () => <div className="text-6xl">🥋</div>,
-      iconColor: "text-orange-500",
-      routineType: 'evening'
-    });
-    baseRoutine.push({
-      time: "4:50 PM",
-      activity: "Karate Time!",
-      description: "Jack & Sam Leave for Karate",
-      timeInMinutes: 16 * 60 + 50,
-      icon: () => <div className="text-6xl">🥋</div>,
-      iconColor: "text-red-500",
-      routineType: 'evening'
-    });
-  }
-
-  baseRoutine.push({
-    time: "5:00 PM",
-    activity: "Get Ready for Dinner!",
-    description: "Dinner in 30 Minutes",
-    timeInMinutes: 17 * 60 + 0,
-    icon: Clock,
-    iconColor: "text-amber-500",
-    routineType: 'evening'
-  });
-  baseRoutine.push({
-    time: "5:30 PM",
-    activity: "Dinner Time!",
-    description: "Family Dinner Together",
-    timeInMinutes: 17 * 60 + 30,
-    icon: ForkKnife,
-    iconColor: "text-red-500",
-    routineType: 'evening'
-  });
-  baseRoutine.push({
-    time: "6:10 PM",
-    activity: "Clean Up Time!",
-    description: "Clear the Table & Tidy Living Room",
-    timeInMinutes: 18 * 60 + 10,
-    icon: () => <div className="text-6xl">🧹</div>,
-    iconColor: "text-amber-500",
-    routineType: 'evening'
-  });
-  
-  if (isWeeknight) {
-    baseRoutine.push({
-      time: "6:15 PM",
-      activity: "Pick Your Outfit!",
-      description: "Twins Choose Tomorrow's School Clothes",
-      timeInMinutes: 18 * 60 + 15,
-      icon: () => <div className="text-6xl">👕</div>,
-      iconColor: "text-purple-500",
-      routineType: 'evening'
-    });
-  }
-  
-  if (isBathDay) {
-    baseRoutine.push({
-      time: "6:20 PM",
-      activity: "Bath Time!",
-      description: "Take Baths",
-      timeInMinutes: 18 * 60 + 20,
-      icon: () => <div className="text-6xl">🛁</div>,
-      iconColor: "text-blue-500",
-      routineType: 'evening'
-    });
-  } else {
-    baseRoutine.push({
-      time: "6:20 PM",
-      activity: "Family Activity!",
-      description: "Fun Time Together",
-      timeInMinutes: 18 * 60 + 20,
-      icon: () => <div className="text-6xl">👨‍👩‍👧‍👦</div>,
-      iconColor: "text-pink-500",
-      routineType: 'evening'
-    });
-  }
-  
-  baseRoutine.push({
-    time: "6:50 PM",
-    activity: "Twins Get Ready!",
-    description: "Brush Teeth, Potty & Allergy Medicine",
-    timeInMinutes: 18 * 60 + 50,
-    icon: Pill,
-    iconColor: "text-teal-500",
-    routineType: 'evening'
-  });
-  baseRoutine.push({
-    time: "7:05 PM",
-    activity: "Story Time!",
-    description: "Daddy Reads Books to Twins",
-    timeInMinutes: 19 * 60 + 5,
-    icon: Book,
-    iconColor: "text-indigo-500",
-    routineType: 'evening'
-  });
-
-  if (includeGameTime) {
-    baseRoutine.push({
-      time: "7:15 PM",
-      activity: "Game Time!",
-      description: "Jack & Daddy Play Video Games",
-      timeInMinutes: 19 * 60 + 15,
-      icon: GameController,
-      iconColor: "text-green-500",
-      routineType: 'evening'
-    });
-  }
-
-  baseRoutine.push({
-    time: "8:15 PM",
-    activity: "Jack's Bedtime!",
-    description: "Brush Teeth & Get Ready for Bed",
-    timeInMinutes: 20 * 60 + 15,
-    icon: Moon,
-    iconColor: "text-violet-500",
-    routineType: 'evening'
-  });
-
-  baseRoutine.push({
-    time: "8:30 PM",
-    activity: "All Kids Bedtime!",
-    description: "Everyone Should Be in Bed",
-    timeInMinutes: 20 * 60 + 30,
-    icon: Moon,
-    iconColor: "text-indigo-500",
-    routineType: 'evening'
-  });
-
-  return baseRoutine;
-};
-
-const EVENING_ROUTINES: Record<DayOfWeek, RoutineStep[]> = {
-  Monday: createEveningRoutine(false, true, true, true),
-  Tuesday: createEveningRoutine(true, false, false, true),
-  Wednesday: createEveningRoutine(false, true, true, true),
-  Thursday: createEveningRoutine(false, false, false, true),
-  Friday: createEveningRoutine(true, false, true, true),
-  Saturday: createEveningRoutine(true, false, false, false),
-  Sunday: createEveningRoutine(false, false, false, false)
-};
+try {
+  loadedRoutines = loadRoutines();
+} catch (error) {
+  routinesError = error instanceof Error ? error : new Error(String(error));
+}
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -280,6 +26,38 @@ function App() {
   const [lastStep, setLastStep] = useState<number>(-3);
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+
+  // Show error screen if config failed to load
+  if (routinesError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-8">
+        <Card className="p-8 max-w-2xl border-2 border-red-500">
+          <div className="space-y-4">
+            <h1 className="text-4xl font-black text-red-700">Configuration Error</h1>
+            <p className="text-lg text-red-600 font-semibold">Failed to load routines configuration</p>
+            <div className="bg-red-50 border border-red-300 rounded p-4">
+              <p className="text-sm font-mono text-red-700 whitespace-pre-wrap break-words">
+                {routinesError.message}
+              </p>
+            </div>
+            <div className="bg-amber-50 border border-amber-300 rounded p-4">
+              <p className="text-sm text-amber-800">
+                <strong>Help:</strong> Please check that <code className="font-mono bg-amber-100 px-2 py-1">public/routines.json</code> exists and is valid JSON with all required fields:
+              </p>
+              <ul className="text-sm text-amber-800 list-disc list-inside mt-2 space-y-1">
+                <li><code className="font-mono">weekdayMorning</code> (array)</li>
+                <li><code className="font-mono">saturdayMorning</code> (array)</li>
+                <li><code className="font-mono">eveningRoutines</code> (object with Mon-Sun keys)</li>
+              </ul>
+              <p className="text-sm text-amber-800 mt-3">
+                Each step needs: <code className="font-mono">time, activity, description, timeInMinutes, icon, iconColor</code>
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const getDayOfWeek = (date: Date): DayOfWeek => {
     if (isDebugMode && debugDay) {
@@ -295,17 +73,20 @@ function App() {
   };
 
   const getDailyRoutine = (): RoutineStep[] => {
-    const timeToUse = isDebugMode ? debugTime : currentTime;
-    const dayOfWeek = getDayOfWeek(timeToUse);
-    
-    let morningRoutine: RoutineStep[] = [];
-    if (isSchoolDay(timeToUse)) {
-      morningRoutine = WEEKDAY_MORNING_ROUTINE;
-    } else if (dayOfWeek === 'Saturday') {
-      morningRoutine = SATURDAY_MORNING_ROUTINE;
+    if (!loadedRoutines) {
+      return [];
     }
     
-    const eveningRoutine = EVENING_ROUTINES[dayOfWeek];
+    const dayOfWeek = getDayOfWeek(isDebugMode ? debugTime : currentTime);
+    
+    let morningRoutine: RoutineStep[] = [];
+    if (dayOfWeek === 'Monday' || dayOfWeek === 'Tuesday' || dayOfWeek === 'Wednesday' || dayOfWeek === 'Thursday' || dayOfWeek === 'Friday') {
+      morningRoutine = loadedRoutines.weekdayMorning;
+    } else if (dayOfWeek === 'Saturday') {
+      morningRoutine = loadedRoutines.saturdayMorning;
+    }
+    
+    const eveningRoutine = loadedRoutines.eveningRoutines[dayOfWeek];
     return [...morningRoutine, ...eveningRoutine];
   };
 
