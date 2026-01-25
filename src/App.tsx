@@ -28,6 +28,7 @@ function App() {
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [activityNotification, setActivityNotification] = useState<string | null>(null);
   const [speechAvailable, setSpeechAvailable] = useState(true);
+  const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Show error screen if config failed to load
   if (routinesError) {
@@ -112,7 +113,7 @@ function App() {
       // Try to detect Samsung TV browser
       const userAgent = navigator.userAgent.toLowerCase();
       const isSamsungTV = userAgent.includes('tizen') || 
-                          userAgent.includes('samsung') && userAgent.includes('smart-tv');
+                          (userAgent.includes('samsung') && userAgent.includes('smart-tv'));
       
       if (isSamsungTV) {
         setSpeechAvailable(false);
@@ -133,6 +134,15 @@ function App() {
     };
 
     checkSpeechAvailability();
+  }, []);
+
+  // Cleanup notification timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Initialize audio context on first user interaction
@@ -227,10 +237,12 @@ function App() {
           utterance.voice = preferredVoice;
         }
         
-        window.speechSynthesis.speak(utterance);
+        // Add error handler to fallback to visual notification if speech fails
+        utterance.onerror = () => {
+          showActivityNotification(stepIndex);
+        };
         
-        // Also show visual notification as a backup
-        showActivityNotification(stepIndex);
+        window.speechSynthesis.speak(utterance);
       }
     } catch (error) {
       console.warn('Speech synthesis failed:', error);
@@ -256,10 +268,16 @@ function App() {
     }
     
     if (message) {
+      // Clear any existing timeout
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+      
       setActivityNotification(message);
       // Auto-hide after 8 seconds
-      setTimeout(() => {
+      notificationTimeoutRef.current = setTimeout(() => {
         setActivityNotification(null);
+        notificationTimeoutRef.current = null;
       }, 8000);
     }
   };
@@ -884,12 +902,24 @@ function App() {
         {activityNotification && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500"
-            onClick={() => setActivityNotification(null)}
+            onClick={() => {
+              setActivityNotification(null);
+              if (notificationTimeoutRef.current) {
+                clearTimeout(notificationTimeoutRef.current);
+                notificationTimeoutRef.current = null;
+              }
+            }}
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
           >
             <Card className="p-16 max-w-4xl mx-8 border-4 border-primary bg-gradient-to-br from-primary/20 to-secondary/20">
               <div className="space-y-6 text-center">
-                <div className="text-8xl">🔔</div>
-                <h2 className="text-6xl font-black text-primary leading-tight whitespace-pre-line">
+                <div className="text-8xl" aria-hidden="true">🔔</div>
+                <h2 
+                  id="notification-title"
+                  className="text-6xl font-black text-primary leading-tight whitespace-pre-line"
+                >
                   {activityNotification}
                 </h2>
                 <p className="text-3xl text-muted-foreground mt-8">
