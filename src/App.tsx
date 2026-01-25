@@ -252,6 +252,14 @@ function App() {
   };
 
   // Show visual notification for activity changes
+  const dismissNotification = () => {
+    setActivityNotification(null);
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
+    }
+  };
+
   const showActivityNotification = (stepIndex: number) => {
     let message = '';
     const DAILY_ROUTINE = getDailyRoutine();
@@ -276,8 +284,7 @@ function App() {
       setActivityNotification(message);
       // Auto-hide after 8 seconds
       notificationTimeoutRef.current = setTimeout(() => {
-        setActivityNotification(null);
-        notificationTimeoutRef.current = null;
+        dismissNotification();
       }, 8000);
     }
   };
@@ -902,13 +909,7 @@ function App() {
         {activityNotification && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500"
-            onClick={() => {
-              setActivityNotification(null);
-              if (notificationTimeoutRef.current) {
-                clearTimeout(notificationTimeoutRef.current);
-                notificationTimeoutRef.current = null;
-              }
-            }}
+            onClick={dismissNotification}
             role="alert"
             aria-live="assertive"
             aria-atomic="true"
