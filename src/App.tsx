@@ -80,7 +80,7 @@ function App() {
     const dayOfWeek = getDayOfWeek(isDebugMode ? debugTime : currentTime);
     
     let morningRoutine: RoutineStep[] = [];
-    if (dayOfWeek === 'Monday' || dayOfWeek === 'Tuesday' || dayOfWeek === 'Wednesday' || dayOfWeek === 'Thursday' || dayOfWeek === 'Friday') {
+    if (isSchoolDay(isDebugMode ? debugTime : currentTime)) {
       morningRoutine = loadedRoutines.weekdayMorning;
     } else if (dayOfWeek === 'Saturday') {
       morningRoutine = loadedRoutines.saturdayMorning;

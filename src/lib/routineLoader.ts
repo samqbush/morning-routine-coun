@@ -39,14 +39,46 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Moon,
 };
 
+// Recommended Tailwind text color classes for routine step icons
+const VALID_ICON_COLORS = [
+  'text-blue-500',
+  'text-orange-500',
+  'text-purple-500',
+  'text-yellow-500',
+  'text-pink-500',
+  'text-green-500',
+  'text-red-500',
+  'text-amber-500',
+  'text-teal-500',
+  'text-indigo-500',
+  'text-violet-500',
+];
+
 /**
  * Validates icon reference (either icon name or emoji)
  */
 function parseIcon(iconRef: string): React.ComponentType<any> {
   if (iconRef.startsWith('emoji:')) {
     const emoji = iconRef.slice(6);
-    // Return a component that renders the emoji
-    return (props: any) => React.createElement('div', { className: `text-6xl ${props.className || ''}` }, emoji);
+    // Return a component that renders the emoji and respects size/className props
+    return (props: any) => {
+      const { size, className = '', ...restProps } = props || {};
+
+      // Map a numeric size (similar to Phosphor) to a Tailwind text size class
+      let sizeClass = 'text-6xl';
+      if (typeof size === 'number') {
+        if (size <= 16) sizeClass = 'text-lg';
+        else if (size <= 24) sizeClass = 'text-xl';
+        else if (size <= 32) sizeClass = 'text-2xl';
+        else if (size <= 40) sizeClass = 'text-3xl';
+        else if (size <= 48) sizeClass = 'text-4xl';
+        else if (size <= 56) sizeClass = 'text-5xl';
+        else sizeClass = 'text-6xl';
+      }
+
+      const combinedClassName = `${sizeClass} ${className}`.trim();
+      return React.createElement('div', { className: combinedClassName, ...restProps }, emoji);
+    };
   }
 
   if (!(iconRef in ICON_MAP)) {
@@ -76,10 +108,18 @@ function validateStep(step: any, day: string, index: number): void {
     );
   }
 
-  if (!['text-blue-500', 'text-orange-500', 'text-purple-500', 'text-yellow-500', 'text-pink-500', 'text-green-500', 'text-red-500', 'text-amber-500', 'text-teal-500', 'text-indigo-500', 'text-violet-500'].some(color => step.iconColor.includes(color))) {
-    // Allow custom color classes, just warn if it doesn't look like a Tailwind class
-    if (!step.iconColor.startsWith('text-')) {
-      console.warn(`Unusual iconColor in ${day} step ${index}: "${step.iconColor}". Expected format: "text-colorname-###"`);
+  // Strict check to avoid false positives (e.g., "text-blue-500-something")
+  if (!VALID_ICON_COLORS.includes(step.iconColor)) {
+    // Allow custom color classes, but warn if the pattern looks off
+    const isTailwindTextColor = /^text-[a-z-]+-\d{3}$/.test(step.iconColor);
+    if (!isTailwindTextColor) {
+      console.warn(
+        `Unusual iconColor in ${day} step ${index}: "${step.iconColor}". Expected Tailwind class like "text-blue-500".`
+      );
+    } else {
+      console.warn(
+        `Non-standard iconColor in ${day} step ${index}: "${step.iconColor}". Not in recommended set, using as-is.`
+      );
     }
   }
 }

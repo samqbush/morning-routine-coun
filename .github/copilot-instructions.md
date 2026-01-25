@@ -9,11 +9,11 @@ A TV-optimized React timer app helping children follow morning and evening routi
 All application logic lives in [src/App.tsx](../src/App.tsx) (~1200 lines). This is intentional for this simple app - avoid splitting into smaller components unless explicitly requested.
 
 ### Routine System
-Routines are arrays of `RoutineStep` objects with two types:
-- **Morning routines**: `WEEKDAY_MORNING_ROUTINE` (Jack/Ava/Dana school prep) and `SATURDAY_MORNING_ROUTINE` (ballet)
-- **Evening routines**: Dynamically generated via `createEveningRoutine()` based on day-of-week logic (karate days, bath days, game time)
+Routines are configuration-driven and loaded at runtime from [`public/routines.json`](../public/routines.json) via [`src/lib/routineLoader.ts`](../src/lib/routineLoader.ts).
+- **Morning routines** and **evening routines** (e.g., school prep, ballet, karate days, bath days, game time) are defined as data in `routines.json` rather than hardcoded arrays or conditional logic in `App.tsx`.
+- The loader is responsible for parsing the JSON, validating it against the expected schema, and exposing the routines to `App.tsx`.
 
-Each step requires: `time`, `activity`, `description`, `timeInMinutes` (minutes since midnight), `icon`, `iconColor`, and `routineType: 'morning' | 'evening'`
+Each configured step is a `RoutineStep` object with: `time`, `activity`, `description`, `timeInMinutes` (minutes since midnight), `icon`, `iconColor`, and `routineType: 'morning' | 'evening'`.
 
 ### Timer Logic
 - Calculates current step by comparing `Date.now()` against `timeInMinutes`
