@@ -26,6 +26,8 @@ function App() {
   const [lastStep, setLastStep] = useState<number>(-3);
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [activityNotification, setActivityNotification] = useState<string | null>(null);
+  const [speechAvailable, setSpeechAvailable] = useState(true);
 
   // Show error screen if config failed to load
   if (routinesError) {
@@ -98,6 +100,41 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Check speech synthesis availability on mount
+  useEffect(() => {
+    const checkSpeechAvailability = () => {
+      // Check if speechSynthesis exists
+      if (!('speechSynthesis' in window)) {
+        setSpeechAvailable(false);
+        return;
+      }
+
+      // Try to detect Samsung TV browser
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isSamsungTV = userAgent.includes('tizen') || 
+                          userAgent.includes('samsung') && userAgent.includes('smart-tv');
+      
+      if (isSamsungTV) {
+        setSpeechAvailable(false);
+        console.warn('Samsung TV detected - Speech Synthesis not supported');
+        return;
+      }
+
+      // Test if speechSynthesis actually works
+      try {
+        const testUtterance = new SpeechSynthesisUtterance('');
+        window.speechSynthesis.speak(testUtterance);
+        window.speechSynthesis.cancel();
+        setSpeechAvailable(true);
+      } catch (error) {
+        console.warn('Speech synthesis test failed:', error);
+        setSpeechAvailable(false);
+      }
+    };
+
+    checkSpeechAvailability();
+  }, []);
+
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
     if (!audioContextRef.current) {
@@ -150,7 +187,11 @@ function App() {
 
   // Announce activity using speech synthesis
   const announceActivity = (stepIndex: number) => {
-    if (!speechEnabled || !('speechSynthesis' in window)) return;
+    if (!speechEnabled || !speechAvailable || !('speechSynthesis' in window)) {
+      // Show visual notification when speech is not available
+      showActivityNotification(stepIndex);
+      return;
+    }
     
     try {
       window.speechSynthesis.cancel();
@@ -187,9 +228,39 @@ function App() {
         }
         
         window.speechSynthesis.speak(utterance);
+        
+        // Also show visual notification as a backup
+        showActivityNotification(stepIndex);
       }
     } catch (error) {
       console.warn('Speech synthesis failed:', error);
+      // Fallback to visual notification
+      showActivityNotification(stepIndex);
+    }
+  };
+
+  // Show visual notification for activity changes
+  const showActivityNotification = (stepIndex: number) => {
+    let message = '';
+    const DAILY_ROUTINE = getDailyRoutine();
+    
+    if (stepIndex === -2) {
+      message = 'Good morning! Get ready to start your routine!';
+    } else if (stepIndex === -1) {
+      message = 'Good night! See you tomorrow morning!';
+    } else if (stepIndex >= DAILY_ROUTINE.length) {
+      message = 'Great job! Now it\'s Sam and Jill time. Mommy and Daddy can relax together!';
+    } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
+      const activity = DAILY_ROUTINE[stepIndex];
+      message = `Time for ${activity.activity}!\n${activity.description}`;
+    }
+    
+    if (message) {
+      setActivityNotification(message);
+      // Auto-hide after 8 seconds
+      setTimeout(() => {
+        setActivityNotification(null);
+      }, 8000);
     }
   };
 
@@ -794,6 +865,41 @@ function App() {
         {/* Debug Controls */}
         {isDebugMode && <DebugControls />}
         
+        {/* Speech Unavailable Warning Banner */}
+        {!speechAvailable && (
+          <Card className="p-6 border-2 border-orange-500 bg-orange-50">
+            <div className="flex items-center gap-4">
+              <SpeakerX size={48} className="text-orange-600" />
+              <div>
+                <h3 className="text-2xl font-bold text-orange-900">Voice Announcements Not Available</h3>
+                <p className="text-lg text-orange-700 mt-1">
+                  Your TV browser doesn't support voice announcements. Watch for the large visual notifications when activities change!
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Fullscreen Activity Notification - replaces speech on TV */}
+        {activityNotification && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500"
+            onClick={() => setActivityNotification(null)}
+          >
+            <Card className="p-16 max-w-4xl mx-8 border-4 border-primary bg-gradient-to-br from-primary/20 to-secondary/20">
+              <div className="space-y-6 text-center">
+                <div className="text-8xl">🔔</div>
+                <h2 className="text-6xl font-black text-primary leading-tight whitespace-pre-line">
+                  {activityNotification}
+                </h2>
+                <p className="text-3xl text-muted-foreground mt-8">
+                  Tap anywhere to dismiss
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
+        
         {/* Progress Bar */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -863,9 +969,12 @@ function App() {
                 variant="ghost"
                 onClick={() => setSpeechEnabled(!speechEnabled)}
                 className="gap-1 text-sm"
+                disabled={!speechAvailable}
               >
-                {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
-                <span className="text-xs">{speechEnabled ? 'Voice On' : 'Voice Off'}</span>
+                {speechEnabled && speechAvailable ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
+                <span className="text-xs">
+                  {!speechAvailable ? 'Voice Unavailable' : speechEnabled ? 'Voice On' : 'Voice Off'}
+                </span>
               </Button>
             </div>
 
