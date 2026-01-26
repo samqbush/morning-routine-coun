@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX } from '@phosphor-icons/react';
+import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX, CheckCircle } from '@phosphor-icons/react';
 import { loadRoutines, RoutineStep } from '@/lib/routineLoader';
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
@@ -28,7 +28,7 @@ function App() {
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [activityNotification, setActivityNotification] = useState<string | null>(null);
   const [speechAvailable, setSpeechAvailable] = useState(true);
-  const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Show error screen if config failed to load
   if (routinesError) {
@@ -121,16 +121,8 @@ function App() {
         return;
       }
 
-      // Test if speechSynthesis actually works
-      try {
-        const testUtterance = new SpeechSynthesisUtterance('');
-        window.speechSynthesis.speak(testUtterance);
-        window.speechSynthesis.cancel();
-        setSpeechAvailable(true);
-      } catch (error) {
-        console.warn('Speech synthesis test failed:', error);
-        setSpeechAvailable(false);
-      }
+      // Rely on feature/UA detection; some browsers require user gesture before speak()
+      setSpeechAvailable(true);
     };
 
     checkSpeechAvailability();
@@ -197,8 +189,13 @@ function App() {
 
   // Announce activity using speech synthesis
   const announceActivity = (stepIndex: number) => {
-    if (!speechEnabled || !speechAvailable || !('speechSynthesis' in window)) {
-      // Show visual notification when speech is not available
+    // If the user has turned voice off, do not speak or show fallback notifications
+    if (!speechEnabled) {
+      return;
+    }
+
+    // If speech is unavailable, show visual notification instead
+    if (!speechAvailable || !('speechSynthesis' in window)) {
       showActivityNotification(stepIndex);
       return;
     }
@@ -239,6 +236,7 @@ function App() {
         
         // Add error handler to fallback to visual notification if speech fails
         utterance.onerror = () => {
+          setSpeechAvailable(false);
           showActivityNotification(stepIndex);
         };
         
@@ -246,6 +244,7 @@ function App() {
       }
     } catch (error) {
       console.warn('Speech synthesis failed:', error);
+      setSpeechAvailable(false);
       // Fallback to visual notification
       showActivityNotification(stepIndex);
     }
