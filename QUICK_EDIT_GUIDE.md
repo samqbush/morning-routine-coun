@@ -4,45 +4,43 @@
 **Edit this file:** `public/routines.json` (in any text editor)
 
 ## ⏱️ Time Format
-All times use **24-hour minutes** from midnight (0-1439):
-- **6:30 AM** = 390 minutes
-- **12:00 PM** = 720 minutes  
-- **5:30 PM** = 1050 minutes
-- **8:30 PM** = 1230 minutes
-
-**Formula:** `(hours × 60) + minutes`
+All times use **24-hour time** in `HH:MM` format:
+- **06:30** = 6:30 AM
+- **12:00** = noon
+- **17:30** = 5:30 PM
+- **20:30** = 8:30 PM
 
 ## 🎨 Icon Reference
 
 ### Built-in Icons (Use Name Directly)
 | Icon | Code | When to Use |
 |------|------|------------|
-| ⏰ | `"Clock"` | Waiting/countdown times |
-| ✅ | `"CheckCircle"` | Completion, milestones |
-| 🚽 | `"Toilet"` | Bathroom time |
-| 🍴 | `"ForkKnife"` | Meals, eating |
-| 🎒 | `"Backpack"` | Packing, getting ready |
-| 🚌 | `"Bus"` | School, transportation |
-| 💊 | `"Pill"` | Medicine, health |
-| 📖 | `"Book"` | Reading, stories |
-| 🎮 | `"GameController"` | Games, play time |
-| 🌙 | `"Moon"` | Bedtime, sleep |
+| ⏰ | "Clock" | Waiting/countdown times |
+| ✅ | "CheckCircle" | Completion, milestones |
+| 🚽 | "Toilet" | Bathroom time |
+| 🍴 | "ForkKnife" | Meals, eating |
+| 🎒 | "Backpack" | Packing, getting ready |
+| 🚌 | "Bus" | School, transportation |
+| 💊 | "Pill" | Medicine, health |
+| 📖 | "Book" | Reading, stories |
+| 🎮 | "GameController" | Games, play time |
+| 🌙 | "Moon" | Bedtime, sleep |
 
 ### Emoji Icons (Use `emoji:` Prefix)
 | Example | Code |
 |---------|------|
-| 🚗 Car | `"emoji:🚗"` |
-| 🩰 Ballet | `"emoji:🩰"` |
-| 🥋 Karate | `"emoji:🥋"` |
-| 🛁 Bath | `"emoji:🛁"` |
-| 🧹 Cleaning | `"emoji:🧹"` |
-| 👕 Clothes | `"emoji:👕"` |
-| 👨‍👩‍👧‍👦 Family | `"emoji:👨‍👩‍👧‍👦"` |
-| 🍎 Apple | `"emoji:🍎"` |
+| 🚗 Car | "emoji:🚗" |
+| 🩰 Ballet | "emoji:🩰" |
+| 🥋 Karate | "emoji:🥋" |
+| 🛁 Bath | "emoji:🛁" |
+| 🧹 Cleaning | "emoji:🧹" |
+| 👕 Clothes | "emoji:👕" |
+| 👨‍👩‍👧‍👦 Family | "emoji:👨‍👩‍👧‍👦" |
+| 🍎 Apple | "emoji:🍎" |
 
 ## 🌈 Color Reference
 
-**Use any of these for `"iconColor"`:**
+**Use any of these for "iconColor":**
 
 | Dark Colors | Bright Colors | Neutral Colors |
 |-------------|---------------|----------------|
@@ -57,10 +55,9 @@ All times use **24-hour minutes** from midnight (0-1439):
 ### ✏️ Edit Activity Name
 ```json
 {
-  "time": "7:30 AM",
+  "time": "07:30",
   "activity": "Ava & Dana School Time!",  // ← Change this
   "description": "Get in the Car",
-  "timeInMinutes": 450,
   "icon": "emoji:🚗",
   "iconColor": "text-pink-500"
 }
@@ -69,23 +66,20 @@ All times use **24-hour minutes** from midnight (0-1439):
 ### ⏱️ Change Activity Time
 ```json
 {
-  "time": "5:30 PM",        // ← Change 12-hour display
+  "time": "17:30",        // ← Change time
   "activity": "Dinner Time!",
   "description": "Family Dinner",
-  "timeInMinutes": 1050,    // ← Change minutes (5:30 = 5*60+30 = 330... wait!)
   "icon": "ForkKnife",
   "iconColor": "text-red-500"
 }
 ```
-**Math check:** 5:30 PM = 17:30 = (17×60)+30 = **1050** ✓
 
 ### 🎨 Change Icon
 ```json
 {
-  "time": "6:30 AM",
+  "time": "06:30",
   "activity": "Wake Up!",
   "description": "Time to get up",
-  "timeInMinutes": 390,
   "icon": "Clock",           // ← Was "Toilet", now "Clock"
   "iconColor": "text-blue-500"
 }
@@ -102,10 +96,9 @@ All times use **24-hour minutes** from midnight (0-1439):
 ### ➕ Add New Step (Keep Time Order!)
 ```json
 {
-  "time": "3:30 PM",
+  "time": "15:30",
   "activity": "Snack Time!",
   "description": "Eat a healthy snack",
-  "timeInMinutes": 930,
   "icon": "emoji:🍎",
   "iconColor": "text-red-500"
 }
@@ -118,10 +111,9 @@ Just delete the entire `{ ... }` object. Example:
 ```json
 // Delete this whole block:
 {
-  "time": "7:15 PM",
+  "time": "19:15",
   "activity": "Game Time!",
   "description": "Jack & Daddy Play Video Games",
-  "timeInMinutes": 1155,
   "icon": "GameController",
   "iconColor": "text-green-500"
 }
@@ -130,8 +122,8 @@ Just delete the entire `{ ... }` object. Example:
 ## ✅ Checklist Before Saving
 
 - [ ] All `{` have matching `}`
-- [ ] All times are in correct order (6:30 AM before 6:40 AM)
-- [ ] `timeInMinutes` matches the time display (6:30 AM = 390?)
+- [ ] All times are in correct order (06:30 before 06:40)
+- [ ] Time format is 24-hour `HH:MM` (e.g., 06:30 or 17:30)
 - [ ] Icon name is spelled correctly (Toilet not Tolit)
 - [ ] Color class looks right (`text-blue-500` not `text-blue`)
 - [ ] No trailing commas (last item doesn't have `,`)

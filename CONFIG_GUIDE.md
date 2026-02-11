@@ -22,21 +22,17 @@ Each routine step requires these fields:
 
 ```json
 {
-  "time": "6:30 AM",                    // Display time (required)
+  "time": "06:30",                     // 24-hour time (required)
   "activity": "Jack Wake Up!",          // Activity name (required)
   "description": "Brush Teeth & Potty", // Detailed description (required)
-  "timeInMinutes": 390,                 // Minutes since midnight (0-1439, required)
   "icon": "Toilet",                     // Icon name or emoji: prefix (required)
   "iconColor": "text-blue-500"          // Tailwind color class (required)
 }
 ```
 
-### Time Calculation
+### Time Format
 
-`timeInMinutes` = (hours × 60) + minutes in 24-hour format:
-- 6:30 AM = (6 × 60) + 30 = **390**
-- 5:00 PM = (17 × 60) + 0 = **1020**
-- 8:30 PM = (20 × 60) + 30 = **1230**
+Use 24-hour time in `HH:MM` format, for example `06:30` or `17:30`.
 
 ### Icon Options
 
@@ -62,10 +58,9 @@ To add "Snack Time" at 3:30 PM on Tuesday with an apple emoji:
 
 ```json
 {
-  "time": "3:30 PM",
+  "time": "15:30",
   "activity": "Snack Time!",
   "description": "Eat a healthy snack",
-  "timeInMinutes": 930,
   "icon": "emoji:🍎",
   "iconColor": "text-red-500"
 }
@@ -78,8 +73,7 @@ To add "Snack Time" at 3:30 PM on Tuesday with an apple emoji:
 To move "Dinner Time" from 5:30 PM to 5:45 PM:
 
 1. Find the **"Dinner Time!"** step in the relevant days
-2. Change `"time": "5:30 PM"` → `"time": "5:45 PM"`
-3. Change `"timeInMinutes": 1050` → `"timeInMinutes": 1065`
+2. Change `"time": "17:30"` → `"time": "17:45"`
 
 ## Example: Removing a Step
 
@@ -88,7 +82,7 @@ Simply delete the entire step object from the array. For example, to remove "Gam
 ```json
 // Remove this entire object from Tuesday's array:
 {
-  "time": "7:15 PM",
+  "time": "19:15",
   "activity": "Game Time!",
   ...
 }
@@ -120,6 +114,6 @@ If `public/routines.json` has errors, the app displays a **red error screen** wi
 | Problem | Solution |
 |---------|----------|
 | App shows red error screen | Check error message; verify JSON syntax (use [jsonlint.com](https://jsonlint.com)) |
-| Step doesn't appear | Check `timeInMinutes` is in correct range (0-1439) and steps are ordered by time |
+| Step doesn't appear | Check the time format is 24-hour `HH:MM` and steps are ordered by time |
 | Icon doesn't display | Verify icon name is spelled correctly or emoji: prefix is used |
 | Color looks wrong | Check Tailwind color class spelling (e.g., `text-blue-500` not `text-blue500`) |

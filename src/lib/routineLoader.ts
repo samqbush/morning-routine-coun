@@ -54,6 +54,8 @@ const VALID_ICON_COLORS = [
   'text-violet-500',
 ];
 
+const TIME_24H_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+
 /**
  * Validates icon reference (either icon name or emoji)
  */
@@ -90,11 +92,26 @@ function parseIcon(iconRef: string): React.ComponentType<any> {
   return ICON_MAP[iconRef];
 }
 
+function parseTimeToMinutes(time: string, day: string, index: number): number {
+  if (typeof time !== 'string') {
+    throw new Error(`Invalid time in ${day} step ${index}. Expected a 24-hour time string like "18:20".`);
+  }
+
+  const match = TIME_24H_PATTERN.exec(time.trim());
+  if (!match) {
+    throw new Error(`Invalid time "${time}" in ${day} step ${index}. Use 24-hour format like "18:20".`);
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  return hours * 60 + minutes;
+}
+
 /**
  * Validates a single routine step from config
  */
 function validateStep(step: any, day: string, index: number): void {
-  const requiredFields = ['time', 'activity', 'description', 'timeInMinutes', 'icon', 'iconColor'];
+  const requiredFields = ['time', 'activity', 'description', 'icon', 'iconColor'];
 
   for (const field of requiredFields) {
     if (!(field in step)) {
@@ -102,9 +119,9 @@ function validateStep(step: any, day: string, index: number): void {
     }
   }
 
-  if (typeof step.timeInMinutes !== 'number' || step.timeInMinutes < 0 || step.timeInMinutes >= 1440) {
-    throw new Error(
-      `Invalid timeInMinutes "${step.timeInMinutes}" in ${day} step ${index}. Must be a number between 0 and 1439`
+  if ('timeInMinutes' in step) {
+    console.warn(
+      `Ignoring timeInMinutes in ${day} step ${index}. It is now auto-calculated from the 24-hour time string.`
     );
   }
 
@@ -169,12 +186,17 @@ export function loadRoutines(): {
     }
 
     // Parse icons for all steps
-    const convertStep = (step: any, routineType: 'morning' | 'evening'): RoutineStep => {
+    const convertStep = (
+      step: any,
+      routineType: 'morning' | 'evening',
+      day: string,
+      index: number
+    ): RoutineStep => {
       return {
         time: step.time,
         activity: step.activity,
         description: step.description,
-        timeInMinutes: step.timeInMinutes,
+        timeInMinutes: parseTimeToMinutes(step.time, day, index),
         icon: parseIcon(step.icon),
         iconColor: step.iconColor,
         routineType,
@@ -182,12 +204,12 @@ export function loadRoutines(): {
     };
 
     return {
-      weekdayMorning: weekdayMorning.map(step => convertStep(step, 'morning')),
-      saturdayMorning: saturdayMorning.map(step => convertStep(step, 'morning')),
+      weekdayMorning: weekdayMorning.map((step, i) => convertStep(step, 'morning', 'weekdayMorning', i)),
+      saturdayMorning: saturdayMorning.map((step, i) => convertStep(step, 'morning', 'saturdayMorning', i)),
       eveningRoutines: Object.fromEntries(
         validDays.map(day => [
           day,
-          eveningRoutines[day].map((step: any) => convertStep(step, 'evening')),
+          eveningRoutines[day].map((step: any, i: number) => convertStep(step, 'evening', `eveningRoutines.${day}`, i)),
         ])
       ) as Record<DayOfWeek, RoutineStep[]>,
     };

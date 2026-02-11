@@ -1,92 +1,81 @@
 {
   "weekdayMorning": [
     {
-      "time": "6:30 AM",
+      "time": "06:30",
       "activity": "Jack Wake Up!",
       "description": "Jack: Brush Teeth & Potty",
-      "timeInMinutes": 390,
       "icon": "Toilet",
       "iconColor": "text-blue-500"
     },
     {
-      "time": "6:40 AM",
+      "time": "06:40",
       "activity": "Jack Breakfast Time!",
       "description": "Jack: Eat Breakfast",
-      "timeInMinutes": 400,
       "icon": "ForkKnife",
       "iconColor": "text-orange-500"
     },
     {
-      "time": "7:00 AM",
+      "time": "07:00",
       "activity": "Jack Get Ready!",
       "description": "Jack: Pack Snacks, Water, Put on Shoes",
-      "timeInMinutes": 420,
       "icon": "Backpack",
       "iconColor": "text-purple-500"
     },
     {
-      "time": "7:05 AM",
+      "time": "07:05",
       "activity": "Ava & Dana Wake Up!",
       "description": "Ava & Dana: Brush Teeth & Potty",
-      "timeInMinutes": 425,
       "icon": "Toilet",
       "iconColor": "text-blue-500"
     },
     {
-      "time": "7:17 AM",
+      "time": "07:17",
       "activity": "Jack School Time!",
       "description": "Jack: Leave for School Bus",
-      "timeInMinutes": 437,
       "icon": "Bus",
       "iconColor": "text-yellow-500"
     },
     {
-      "time": "7:20 AM",
-      "activity": "Ava Finish Breakfast!",
-      "description": "Ava: Finish Eating Breakfast",
-      "timeInMinutes": 440,
-      "icon": "ForkKnife",
+      "time": "07:19",
+      "activity": "Ava & Dana Socks & Shoes",
+      "description": "Ava & Dana: Put on Socks & Shoes",
+      "icon": "Socks",
       "iconColor": "text-orange-500"
     },
     {
-      "time": "7:30 AM",
+      "time": "07:25",
       "activity": "Ava & Dana School Time!",
       "description": "Get in the Car - Leaving in 5 Minutes!",
-      "timeInMinutes": 450,
       "icon": "emoji:🚗",
       "iconColor": "text-pink-500"
     },
     {
-      "time": "7:35 AM",
+      "time": "07:35",
       "activity": "Morning Complete!",
       "description": "Time for a Break",
-      "timeInMinutes": 455,
       "icon": "CheckCircle",
       "iconColor": "text-green-500"
     }
   ],
   "saturdayMorning": [
     {
-      "time": "8:00 AM",
+      "time": "08:00",
       "activity": "Breakfast Time!",
       "description": "Eat Breakfast",
-      "timeInMinutes": 480,
       "icon": "ForkKnife",
       "iconColor": "text-orange-500"
     },
     {
-      "time": "8:15 AM",
+      "time": "08:15",
       "activity": "Get Ready!",
       "description": "Get Dressed and Ready",
-      "timeInMinutes": 495,
       "icon": "Backpack",
       "iconColor": "text-purple-500"
     },
     {
-      "time": "8:30 AM",
+      "time": "08:30",
       "activity": "Ballet Time!",
       "description": "Go to Ballet for Ava and Dana",
-      "timeInMinutes": 510,
       "icon": "emoji:🩰",
       "iconColor": "text-pink-500"
     }
@@ -94,550 +83,483 @@
   "eveningRoutines": {
     "Monday": [
       {
-        "time": "4:40 PM",
+        "time": "16:40",
         "activity": "Get Ready for Jack & Sam!",
         "description": "Get Ready for Karate",
-        "timeInMinutes": 1000,
         "icon": "emoji:🥋",
         "iconColor": "text-orange-500"
       },
       {
-        "time": "4:50 PM",
+        "time": "16:50",
         "activity": "Karate Time!",
         "description": "Jack & Sam Leave for Karate",
-        "timeInMinutes": 1010,
         "icon": "emoji:🥋",
         "iconColor": "text-red-500"
       },
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:15 PM",
+        "time": "18:15",
         "activity": "Pick Your Outfit!",
         "description": "Twins Choose Tomorrow's School Clothes",
-        "timeInMinutes": 1095,
         "icon": "emoji:👕",
         "iconColor": "text-purple-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Bath Time!",
         "description": "Take Baths",
-        "timeInMinutes": 1100,
         "icon": "emoji:🛁",
         "iconColor": "text-blue-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
     ],
     "Tuesday": [
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:15 PM",
+        "time": "18:15",
         "activity": "Pick Your Outfit!",
         "description": "Twins Choose Tomorrow's School Clothes",
-        "timeInMinutes": 1095,
         "icon": "emoji:👕",
         "iconColor": "text-purple-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Family Activity!",
         "description": "Fun Time Together",
-        "timeInMinutes": 1100,
         "icon": "emoji:👨‍👩‍👧‍👦",
         "iconColor": "text-pink-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "7:15 PM",
+        "time": "19:15",
         "activity": "Game Time!",
         "description": "Jack & Daddy Play Video Games",
-        "timeInMinutes": 1155,
         "icon": "GameController",
         "iconColor": "text-green-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
     ],
     "Wednesday": [
       {
-        "time": "4:40 PM",
+        "time": "16:40",
         "activity": "Get Ready for Jack & Sam!",
         "description": "Get Ready for Karate",
-        "timeInMinutes": 1000,
         "icon": "emoji:🥋",
         "iconColor": "text-orange-500"
       },
       {
-        "time": "4:50 PM",
+        "time": "16:50",
         "activity": "Karate Time!",
         "description": "Jack & Sam Leave for Karate",
-        "timeInMinutes": 1010,
         "icon": "emoji:🥋",
         "iconColor": "text-red-500"
       },
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:15 PM",
+        "time": "18:15",
         "activity": "Pick Your Outfit!",
         "description": "Twins Choose Tomorrow's School Clothes",
-        "timeInMinutes": 1095,
         "icon": "emoji:👕",
         "iconColor": "text-purple-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Bath Time!",
         "description": "Take Baths",
-        "timeInMinutes": 1100,
         "icon": "emoji:🛁",
         "iconColor": "text-blue-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
     ],
     "Thursday": [
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:15 PM",
+        "time": "18:15",
         "activity": "Pick Your Outfit!",
         "description": "Twins Choose Tomorrow's School Clothes",
-        "timeInMinutes": 1095,
         "icon": "emoji:👕",
         "iconColor": "text-purple-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Family Activity!",
         "description": "Fun Time Together",
-        "timeInMinutes": 1100,
         "icon": "emoji:👨‍👩‍👧‍👦",
         "iconColor": "text-pink-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
     ],
     "Friday": [
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Bath Time!",
         "description": "Take Baths",
-        "timeInMinutes": 1100,
         "icon": "emoji:🛁",
         "iconColor": "text-blue-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "7:15 PM",
+        "time": "19:15",
         "activity": "Game Time!",
         "description": "Jack & Daddy Play Video Games",
-        "timeInMinutes": 1155,
         "icon": "GameController",
         "iconColor": "text-green-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
     ],
     "Saturday": [
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Family Activity!",
         "description": "Fun Time Together",
-        "timeInMinutes": 1100,
         "icon": "emoji:👨‍👩‍👧‍👦",
         "iconColor": "text-pink-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "7:15 PM",
+        "time": "19:15",
         "activity": "Game Time!",
         "description": "Jack & Daddy Play Video Games",
-        "timeInMinutes": 1155,
         "icon": "GameController",
         "iconColor": "text-green-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
     ],
     "Sunday": [
       {
-        "time": "5:00 PM",
+        "time": "17:00",
         "activity": "Get Ready for Dinner!",
         "description": "Dinner in 30 Minutes",
-        "timeInMinutes": 1020,
         "icon": "Clock",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "5:30 PM",
+        "time": "17:30",
         "activity": "Dinner Time!",
         "description": "Family Dinner Together",
-        "timeInMinutes": 1050,
         "icon": "ForkKnife",
         "iconColor": "text-red-500"
       },
       {
-        "time": "6:10 PM",
+        "time": "18:10",
         "activity": "Clean Up Time!",
         "description": "Clear the Table & Tidy Living Room",
-        "timeInMinutes": 1090,
         "icon": "emoji:🧹",
         "iconColor": "text-amber-500"
       },
       {
-        "time": "6:20 PM",
+        "time": "18:20",
         "activity": "Family Activity!",
         "description": "Fun Time Together",
-        "timeInMinutes": 1100,
         "icon": "emoji:👨‍👩‍👧‍👦",
         "iconColor": "text-pink-500"
       },
       {
-        "time": "6:50 PM",
+        "time": "18:50",
         "activity": "Twins Get Ready!",
         "description": "Brush Teeth, Potty & Allergy Medicine",
-        "timeInMinutes": 1130,
         "icon": "Pill",
         "iconColor": "text-teal-500"
       },
       {
-        "time": "7:05 PM",
+        "time": "19:05",
         "activity": "Story Time!",
         "description": "Daddy Reads Books to Twins",
-        "timeInMinutes": 1145,
         "icon": "Book",
         "iconColor": "text-indigo-500"
       },
       {
-        "time": "8:15 PM",
+        "time": "20:15",
         "activity": "Jack's Bedtime!",
         "description": "Brush Teeth & Get Ready for Bed",
-        "timeInMinutes": 1215,
         "icon": "Moon",
         "iconColor": "text-violet-500"
       },
       {
-        "time": "8:30 PM",
+        "time": "20:30",
         "activity": "All Kids Bedtime!",
         "description": "Everyone Should Be in Bed",
-        "timeInMinutes": 1230,
         "icon": "Moon",
         "iconColor": "text-indigo-500"
       }
