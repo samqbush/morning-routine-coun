@@ -54,7 +54,7 @@ const VALID_ICON_COLORS = [
   'text-violet-500',
 ];
 
-const TIME_24H_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+const TIME_24H_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 /**
  * Validates icon reference (either icon name or emoji)
@@ -93,13 +93,14 @@ function parseIcon(iconRef: string): React.ComponentType<any> {
 }
 
 function parseTimeToMinutes(time: string, day: string, index: number): number {
+  const displayIndex = index + 1;
   if (typeof time !== 'string') {
-    throw new Error(`Invalid time in ${day} step ${index}. Expected a 24-hour time string like "18:20".`);
+    throw new Error(`Invalid time in ${day} step ${displayIndex}. Expected a 24-hour time string like "18:20".`);
   }
 
   const match = TIME_24H_PATTERN.exec(time.trim());
   if (!match) {
-    throw new Error(`Invalid time "${time}" in ${day} step ${index}. Use 24-hour format like "18:20".`);
+    throw new Error(`Invalid time "${time}" in ${day} step ${displayIndex}. Use 24-hour format like "18:20".`);
   }
 
   const hours = Number(match[1]);
@@ -111,17 +112,18 @@ function parseTimeToMinutes(time: string, day: string, index: number): number {
  * Validates a single routine step from config
  */
 function validateStep(step: any, day: string, index: number): void {
+  const displayIndex = index + 1;
   const requiredFields = ['time', 'activity', 'description', 'icon', 'iconColor'];
 
   for (const field of requiredFields) {
     if (!(field in step)) {
-      throw new Error(`Missing required field "${field}" in ${day} step ${index}`);
+      throw new Error(`Missing required field "${field}" in ${day} step ${displayIndex}`);
     }
   }
 
   if ('timeInMinutes' in step) {
     console.warn(
-      `Ignoring timeInMinutes in ${day} step ${index}. It is now auto-calculated from the 24-hour time string.`
+      `Ignoring timeInMinutes in ${day} step ${displayIndex}. It is now auto-calculated from the 24-hour time string.`
     );
   }
 
@@ -131,11 +133,11 @@ function validateStep(step: any, day: string, index: number): void {
     const isTailwindTextColor = /^text-[a-z-]+-\d{3}$/.test(step.iconColor);
     if (!isTailwindTextColor) {
       console.warn(
-        `Unusual iconColor in ${day} step ${index}: "${step.iconColor}". Expected Tailwind class like "text-blue-500".`
+        `Unusual iconColor in ${day} step ${displayIndex}: "${step.iconColor}". Expected Tailwind class like "text-blue-500".`
       );
     } else {
       console.warn(
-        `Non-standard iconColor in ${day} step ${index}: "${step.iconColor}". Not in recommended set, using as-is.`
+        `Non-standard iconColor in ${day} step ${displayIndex}: "${step.iconColor}". Not in recommended set, using as-is.`
       );
     }
   }
