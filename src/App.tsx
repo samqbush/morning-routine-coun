@@ -53,7 +53,7 @@ function App() {
                 <li><code className="font-mono">eveningRoutines</code> (object with Mon-Sun keys)</li>
               </ul>
               <p className="text-sm text-amber-800 mt-3">
-                Each step needs: <code className="font-mono">time, activity, description, timeInMinutes, icon, iconColor</code>
+                Each step needs: <code className="font-mono">time (24-hour HH:MM), activity, description, icon, iconColor</code>
               </p>
             </div>
           </div>
