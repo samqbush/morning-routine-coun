@@ -8,17 +8,18 @@ The morning routine timer is now fully configurable through `public/routines.jso
 {
   "weekdayMorning": [ /* Monday-Friday morning steps */ ],
   "saturdayMorning": [ /* Saturday morning steps */ ],
-  "eveningRoutines": {
-    "Monday": [ /* Monday evening steps */ ],
-    "Tuesday": [ /* Tuesday evening steps */ ],
+  "eveningSteps": [ /* All available evening steps with durations */ ],
+  "eveningPresets": {
+    "Monday": [ /* Step IDs for Monday's default */ ],
+    "Tuesday": [ /* Step IDs for Tuesday's default */ ],
     /* ... Wed, Thu, Fri, Sat, Sun ... */
   }
 }
 ```
 
-## Step Definition
+## Morning Step Definition
 
-Each routine step requires these fields:
+Each morning routine step requires these fields:
 
 ```json
 {
@@ -30,9 +31,37 @@ Each routine step requires these fields:
 }
 ```
 
-### Time Format
+### Time Format (Morning Only)
 
-Use 24-hour time in `HH:MM` format, for example `06:30` or `17:30`.
+Use 24-hour time in `HH:MM` format, for example `06:30` or `07:30`.
+
+## Evening Step Definition
+
+Evening steps use **duration in minutes** instead of fixed clock times. The user selects which steps to include and clicks "Start" to begin a countdown timer.
+
+```json
+{
+  "id": "dinner",                        // Unique step ID (required)
+  "activity": "Dinner Time!",            // Activity name (required)
+  "description": "Family Dinner Together", // Description (required)
+  "durationMinutes": 40,                 // Duration in minutes (required)
+  "icon": "ForkKnife",                   // Icon name or emoji: prefix (required)
+  "iconColor": "text-red-500"            // Tailwind color class (required)
+}
+```
+
+## Evening Presets
+
+Presets define which steps are selected by default for each day. They are arrays of step IDs:
+
+```json
+"eveningPresets": {
+  "Monday": ["karate-prep", "karate", "dinner-prep", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
+  "Tuesday": ["dinner-prep", "dinner", "cleanup", "outfit", "family-activity", "twins-ready", "story", "game-time", "jack-bed", "all-bed"]
+}
+```
+
+The user can toggle steps on/off and reorder them before starting the routine.
 
 ### Icon Options
 
@@ -49,44 +78,40 @@ Common Tailwind text colors:
 - `text-pink-500`, `text-green-500`, `text-red-500`, `text-amber-500`
 - `text-teal-500`, `text-indigo-500`, `text-violet-500`
 
-## Example: Adding a New Step
+## Example: Adding a New Evening Step
 
-To add "Snack Time" at 3:30 PM on Tuesday with an apple emoji:
-
-1. Find **eveningRoutines.Tuesday** in `public/routines.json`
-2. Add this step in the correct time order:
+1. Add the step to the **`eveningSteps`** array:
 
 ```json
 {
-  "time": "15:30",
+  "id": "snack",
   "activity": "Snack Time!",
   "description": "Eat a healthy snack",
+  "durationMinutes": 15,
   "icon": "emoji:🍎",
   "iconColor": "text-red-500"
 }
 ```
 
-3. Save the file and refresh your browser (no rebuild needed in dev mode)
-
-## Example: Changing a Time
-
-To move "Dinner Time" from 5:30 PM to 5:45 PM:
-
-1. Find the **"Dinner Time!"** step in the relevant days
-2. Change `"time": "17:30"` → `"time": "17:45"`
-
-## Example: Removing a Step
-
-Simply delete the entire step object from the array. For example, to remove "Game Time" on Tuesday:
+2. Add the step ID to the relevant **`eveningPresets`** day arrays:
 
 ```json
-// Remove this entire object from Tuesday's array:
-{
-  "time": "19:15",
-  "activity": "Game Time!",
-  ...
-}
+"Tuesday": ["dinner-prep", "snack", "dinner", "cleanup", ...]
 ```
+
+3. Save the file and refresh your browser (no rebuild needed in dev mode)
+
+## Example: Changing a Duration
+
+To change "Dinner Time" from 40 to 45 minutes:
+
+1. Find the step with `"id": "dinner"` in `eveningSteps`
+2. Change `"durationMinutes": 40` → `"durationMinutes": 45`
+
+## Example: Removing an Evening Step
+
+1. Remove the step object from the `eveningSteps` array
+2. Remove its ID from all `eveningPresets` day arrays
 
 ## Validation & Error Messages
 
@@ -104,8 +129,8 @@ If `public/routines.json` has errors, the app displays a **red error screen** wi
 
 ## Parent-Friendly Tips
 
-- **Copy entire blocks** when adding similar days (e.g., copy Monday's routines to Wednesday, then modify)
-- **Keep times in order** — steps should be sorted by time from earliest to latest
+- **Copy entire blocks** when adding similar steps
+- **Evening steps can be toggled on/off** in the app before starting — no need to edit config for one-night changes
 - **Use emoji for clarity** — parents can visually scan emoji icons when editing
 - **Test in Debug Mode** — click "Test Mode" button in the app to jump to any step and verify timings
 
@@ -114,6 +139,7 @@ If `public/routines.json` has errors, the app displays a **red error screen** wi
 | Problem | Solution |
 |---------|----------|
 | App shows red error screen | Check error message; verify JSON syntax (use [jsonlint.com](https://jsonlint.com)) |
-| Step doesn't appear | Check the time format is 24-hour `HH:MM` and steps are ordered by time |
+| Morning step doesn't appear | Check the time format is 24-hour `HH:MM` and steps are ordered by time |
+| Evening step not in preset | Add its `id` to the appropriate day in `eveningPresets` |
 | Icon doesn't display | Verify icon name is spelled correctly or emoji: prefix is used |
 | Color looks wrong | Check Tailwind color class spelling (e.g., `text-blue-500` not `text-blue500`) |
