@@ -8,6 +8,10 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 // https://vite.dev/config/
 export default defineConfig({
   base: '/morning-routine-coun/',
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
   plugins: [
     react(),
     tailwindcss(),
