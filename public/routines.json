@@ -98,14 +98,6 @@
       "iconColor": "text-red-500"
     },
     {
-      "id": "dinner-prep",
-      "activity": "Get Ready for Dinner!",
-      "description": "Dinner in 30 Minutes",
-      "durationMinutes": 30,
-      "icon": "Clock",
-      "iconColor": "text-amber-500"
-    },
-    {
       "id": "dinner",
       "activity": "Dinner Time!",
       "description": "Family Dinner Together",
@@ -187,12 +179,12 @@
     }
   ],
   "eveningPresets": {
-    "Monday": ["karate-prep", "karate", "dinner-prep", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
-    "Tuesday": ["dinner-prep", "dinner", "cleanup", "outfit", "family-activity", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
-    "Wednesday": ["karate-prep", "karate", "dinner-prep", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
-    "Thursday": ["dinner-prep", "dinner", "cleanup", "outfit", "family-activity", "twins-ready", "story", "jack-bed", "all-bed"],
-    "Friday": ["dinner-prep", "dinner", "cleanup", "bath", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
-    "Saturday": ["dinner-prep", "dinner", "cleanup", "family-activity", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
-    "Sunday": ["dinner-prep", "dinner", "cleanup", "family-activity", "twins-ready", "story", "jack-bed", "all-bed"]
+    "Monday": ["karate-prep", "karate", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
+    "Tuesday": ["dinner", "cleanup", "outfit", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
+    "Wednesday": ["karate-prep", "karate", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
+    "Thursday": ["dinner", "cleanup", "outfit", "twins-ready", "story", "jack-bed", "all-bed"],
+    "Friday": ["dinner", "cleanup", "bath", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
+    "Saturday": ["dinner", "cleanup", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
+    "Sunday": ["dinner", "cleanup", "twins-ready", "story", "jack-bed", "all-bed"]
   }
 }
