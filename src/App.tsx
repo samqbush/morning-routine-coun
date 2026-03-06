@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +37,6 @@ function App() {
   const [stepStartTime, setStepStartTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [pausedTimeRemaining, setPausedTimeRemaining] = useState<number | null>(null);
-  const [lastEveningStep, setLastEveningStep] = useState(-1);
   const [eveningInitialized, setEveningInitialized] = useState(false);
 
   // Show error screen if config failed to load
@@ -104,20 +103,17 @@ function App() {
   };
 
   // Initialize evening preset based on day of week
-  const initEveningPreset = useCallback(() => {
+  const dayForPreset = getDayOfWeek(isDebugMode ? debugTime : currentTime);
+
+  useEffect(() => {
     if (!loadedRoutines || eveningInitialized) return;
-    const dayOfWeek = getDayOfWeek(isDebugMode ? debugTime : currentTime);
-    const presetIds = loadedRoutines.eveningPresets[dayOfWeek];
+    const presetIds = loadedRoutines.eveningPresets[dayForPreset];
     const steps = presetIds
       .map(id => loadedRoutines!.eveningSteps.find(s => s.id === id))
       .filter((s): s is EveningStep => s !== undefined);
     setSelectedSteps(steps);
     setEveningInitialized(true);
-  }, [isDebugMode, debugTime, currentTime, eveningInitialized]);
-
-  useEffect(() => {
-    initEveningPreset();
-  }, [initEveningPreset]);
+  }, [dayForPreset, eveningInitialized]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -387,7 +383,6 @@ function App() {
     setStepStartTime(Date.now());
     setIsPaused(false);
     setPausedTimeRemaining(null);
-    setLastEveningStep(-1);
     playStepChangeSound();
     announceEveningActivity(selectedSteps[0]);
   };
@@ -398,7 +393,6 @@ function App() {
     setStepStartTime(null);
     setIsPaused(false);
     setPausedTimeRemaining(null);
-    setLastEveningStep(-1);
     // Re-initialize from preset
     setEveningInitialized(false);
   };

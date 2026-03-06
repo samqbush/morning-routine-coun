@@ -139,6 +139,22 @@ function validateMorningStep(step: any, day: string, index: number): void {
     }
   }
 
+  if (typeof step.time !== 'string' || step.time.trim() === '') {
+    throw new Error(`Invalid time in ${day} step ${displayIndex}: must be a non-empty string in HH:MM format`);
+  }
+
+  if (typeof step.activity !== 'string' || step.activity.trim() === '') {
+    throw new Error(`Invalid activity in ${day} step ${displayIndex}: must be a non-empty string`);
+  }
+
+  if (typeof step.description !== 'string' || step.description.trim() === '') {
+    throw new Error(`Invalid description in ${day} step ${displayIndex}: must be a non-empty string`);
+  }
+
+  if (typeof step.icon !== 'string' || step.icon.trim() === '') {
+    throw new Error(`Invalid icon in ${day} step ${displayIndex}: must be a non-empty string`);
+  }
+
   if ('timeInMinutes' in step) {
     console.warn(
       `Ignoring timeInMinutes in ${day} step ${displayIndex}. It is now auto-calculated from the 24-hour time string.`
@@ -165,8 +181,20 @@ function validateEveningStep(step: any, index: number): void {
     throw new Error(`Invalid id in eveningSteps step ${displayIndex}: must be a non-empty string`);
   }
 
-  if (typeof step.durationMinutes !== 'number' || step.durationMinutes <= 0) {
-    throw new Error(`Invalid durationMinutes in eveningSteps step ${displayIndex} ("${step.id}"): must be a positive number`);
+  if (typeof step.activity !== 'string' || step.activity.trim() === '') {
+    throw new Error(`Invalid activity in eveningSteps step ${displayIndex} ("${step.id}"): must be a non-empty string`);
+  }
+
+  if (typeof step.description !== 'string' || step.description.trim() === '') {
+    throw new Error(`Invalid description in eveningSteps step ${displayIndex} ("${step.id}"): must be a non-empty string`);
+  }
+
+  if (typeof step.icon !== 'string' || step.icon.trim() === '') {
+    throw new Error(`Invalid icon in eveningSteps step ${displayIndex} ("${step.id}"): must be a non-empty string`);
+  }
+
+  if (!Number.isFinite(step.durationMinutes) || step.durationMinutes <= 0) {
+    throw new Error(`Invalid durationMinutes in eveningSteps step ${displayIndex} ("${step.id}"): must be a positive finite number`);
   }
 
   validateIconColor(step.iconColor, `eveningSteps step ${displayIndex} ("${step.id}")`);

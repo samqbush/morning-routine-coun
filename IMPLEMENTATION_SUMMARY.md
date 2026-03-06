@@ -276,7 +276,7 @@ npm run preview
 - **Evening routine**: Duration-based countdown with user step selection/reordering
 - **Config errors**: Caught at startup, prevents broken app
 - **Adding icons**: Just import + add to ICON_MAP in routineLoader.ts
-- **Adding properties**: Update RoutineStep interface in routineLoader.ts, validate in validateStep(), use in App.tsx
+- **Adding properties**: Update RoutineStep interface in routineLoader.ts, validate in validateMorningStep()/validateEveningStep(), use in App.tsx
 
 ---
 

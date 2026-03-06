@@ -66,9 +66,9 @@ All times use **24-hour time** in `HH:MM` format:
 ### ⏱️ Change Morning Activity Time
 ```json
 {
-  "time": "17:30",        // ← Change time
-  "activity": "Dinner Time!",
-  "description": "Family Dinner",
+  "time": "07:00",        // ← Change time (24-hour format)
+  "activity": "Breakfast Time!",
+  "description": "Eat Breakfast",
   "icon": "ForkKnife",
   "iconColor": "text-red-500"
 }
