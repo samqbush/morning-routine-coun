@@ -9,7 +9,7 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 export default defineConfig({
   base: '/morning-routine-coun/',
   server: {
-    host: '0.0.0.0',
+    host: process.env.VITE_LAN === '1' ? '0.0.0.0' : 'localhost',
     port: 5173,
   },
   plugins: [

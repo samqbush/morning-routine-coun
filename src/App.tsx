@@ -104,15 +104,19 @@ function App() {
 
   // Initialize evening preset based on day of week
   const dayForPreset = getDayOfWeek(isDebugMode ? debugTime : currentTime);
+  const lastEveningPresetDayRef = useRef<typeof dayForPreset | null>(null);
 
   useEffect(() => {
-    if (!loadedRoutines || eveningInitialized) return;
+    if (!loadedRoutines) return;
+    // Re-initialize whenever the day changes, even if already initialized
+    if (eveningInitialized && lastEveningPresetDayRef.current === dayForPreset) return;
     const presetIds = loadedRoutines.eveningPresets[dayForPreset];
     const steps = presetIds
       .map(id => loadedRoutines!.eveningSteps.find(s => s.id === id))
       .filter((s): s is EveningStep => s !== undefined);
     setSelectedSteps(steps);
     setEveningInitialized(true);
+    lastEveningPresetDayRef.current = dayForPreset;
   }, [dayForPreset, eveningInitialized]);
 
   useEffect(() => {
@@ -353,6 +357,9 @@ function App() {
       window.speechSynthesis.speak(utterance);
     } catch {
       setSpeechAvailable(false);
+      if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
+      setActivityNotification(message);
+      notificationTimeoutRef.current = setTimeout(() => dismissNotification(), 8000);
     }
   };
 
@@ -1037,6 +1044,7 @@ function App() {
                       variant="ghost"
                       onClick={() => moveStep(index, 'up')}
                       disabled={index === 0}
+                      aria-label={`Move ${step.activity} up`}
                       className="h-8 w-8 p-0"
                     >
                       <ArrowUp size={20} />
@@ -1046,6 +1054,7 @@ function App() {
                       variant="ghost"
                       onClick={() => moveStep(index, 'down')}
                       disabled={index === selectedSteps.length - 1}
+                      aria-label={`Move ${step.activity} down`}
                       className="h-8 w-8 p-0"
                     >
                       <ArrowDown size={20} />

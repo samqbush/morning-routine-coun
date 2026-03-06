@@ -4,11 +4,14 @@
 **Edit this file:** `public/routines.json` (in any text editor)
 
 ## ⏱️ Time Format
-All times use **24-hour time** in `HH:MM` format:
+
+**Morning steps** use **24-hour time** in `HH:MM` format:
 - **06:30** = 6:30 AM
 - **12:00** = noon
 - **17:30** = 5:30 PM
 - **20:30** = 8:30 PM
+
+**Evening steps** do **not** use clock times — they use `durationMinutes` (a positive number of minutes) instead.
 
 ## 🎨 Icon Reference
 

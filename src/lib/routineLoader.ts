@@ -115,13 +115,19 @@ function parseTimeToMinutes(time: string, day: string, index: number): number {
   return hours * 60 + minutes;
 }
 
-function validateIconColor(iconColor: string, context: string): void {
-  if (!VALID_ICON_COLORS.includes(iconColor)) {
-    const isTailwindTextColor = /^text-[a-z-]+-\d{3}$/.test(iconColor);
+function validateIconColor(iconColor: unknown, context: string): void {
+  if (typeof iconColor !== 'string' || iconColor.trim() === '') {
+    throw new Error(
+      `Invalid iconColor in ${context}. Expected a non-empty Tailwind text color class string (e.g., "text-blue-500").`
+    );
+  }
+  const trimmedIconColor = iconColor.trim();
+  if (!VALID_ICON_COLORS.includes(trimmedIconColor)) {
+    const isTailwindTextColor = /^text-[a-z-]+-\d{3}$/.test(trimmedIconColor);
     if (!isTailwindTextColor) {
-      console.warn(`Unusual iconColor in ${context}: "${iconColor}". Expected Tailwind class like "text-blue-500".`);
+      console.warn(`Unusual iconColor in ${context}: "${trimmedIconColor}". Expected Tailwind class like "text-blue-500".`);
     } else {
-      console.warn(`Non-standard iconColor in ${context}: "${iconColor}". Not in recommended set, using as-is.`);
+      console.warn(`Non-standard iconColor in ${context}: "${trimmedIconColor}". Not in recommended set, using as-is.`);
     }
   }
 }
