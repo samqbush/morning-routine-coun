@@ -80,489 +80,111 @@
       "iconColor": "text-pink-500"
     }
   ],
-  "eveningRoutines": {
-    "Monday": [
-      {
-        "time": "16:40",
-        "activity": "Get Ready for Jack & Sam!",
-        "description": "Get Ready for Karate",
-        "icon": "emoji:🥋",
-        "iconColor": "text-orange-500"
-      },
-      {
-        "time": "16:50",
-        "activity": "Karate Time!",
-        "description": "Jack & Sam Leave for Karate",
-        "icon": "emoji:🥋",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:15",
-        "activity": "Pick Your Outfit!",
-        "description": "Twins Choose Tomorrow's School Clothes",
-        "icon": "emoji:👕",
-        "iconColor": "text-purple-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Bath Time!",
-        "description": "Take Baths",
-        "icon": "emoji:🛁",
-        "iconColor": "text-blue-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ],
-    "Tuesday": [
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:15",
-        "activity": "Pick Your Outfit!",
-        "description": "Twins Choose Tomorrow's School Clothes",
-        "icon": "emoji:👕",
-        "iconColor": "text-purple-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Family Activity!",
-        "description": "Fun Time Together",
-        "icon": "emoji:👨‍👩‍👧‍👦",
-        "iconColor": "text-pink-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "19:15",
-        "activity": "Game Time!",
-        "description": "Jack & Daddy Play Video Games",
-        "icon": "GameController",
-        "iconColor": "text-green-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ],
-    "Wednesday": [
-      {
-        "time": "16:40",
-        "activity": "Get Ready for Jack & Sam!",
-        "description": "Get Ready for Karate",
-        "icon": "emoji:🥋",
-        "iconColor": "text-orange-500"
-      },
-      {
-        "time": "16:50",
-        "activity": "Karate Time!",
-        "description": "Jack & Sam Leave for Karate",
-        "icon": "emoji:🥋",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:15",
-        "activity": "Pick Your Outfit!",
-        "description": "Twins Choose Tomorrow's School Clothes",
-        "icon": "emoji:👕",
-        "iconColor": "text-purple-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Bath Time!",
-        "description": "Take Baths",
-        "icon": "emoji:🛁",
-        "iconColor": "text-blue-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ],
-    "Thursday": [
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:15",
-        "activity": "Pick Your Outfit!",
-        "description": "Twins Choose Tomorrow's School Clothes",
-        "icon": "emoji:👕",
-        "iconColor": "text-purple-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Family Activity!",
-        "description": "Fun Time Together",
-        "icon": "emoji:👨‍👩‍👧‍👦",
-        "iconColor": "text-pink-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ],
-    "Friday": [
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Bath Time!",
-        "description": "Take Baths",
-        "icon": "emoji:🛁",
-        "iconColor": "text-blue-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "19:15",
-        "activity": "Game Time!",
-        "description": "Jack & Daddy Play Video Games",
-        "icon": "GameController",
-        "iconColor": "text-green-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ],
-    "Saturday": [
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Family Activity!",
-        "description": "Fun Time Together",
-        "icon": "emoji:👨‍👩‍👧‍👦",
-        "iconColor": "text-pink-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "19:15",
-        "activity": "Game Time!",
-        "description": "Jack & Daddy Play Video Games",
-        "icon": "GameController",
-        "iconColor": "text-green-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ],
-    "Sunday": [
-      {
-        "time": "17:00",
-        "activity": "Get Ready for Dinner!",
-        "description": "Dinner in 30 Minutes",
-        "icon": "Clock",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "17:30",
-        "activity": "Dinner Time!",
-        "description": "Family Dinner Together",
-        "icon": "ForkKnife",
-        "iconColor": "text-red-500"
-      },
-      {
-        "time": "18:10",
-        "activity": "Clean Up Time!",
-        "description": "Clear the Table & Tidy Living Room",
-        "icon": "emoji:🧹",
-        "iconColor": "text-amber-500"
-      },
-      {
-        "time": "18:20",
-        "activity": "Family Activity!",
-        "description": "Fun Time Together",
-        "icon": "emoji:👨‍👩‍👧‍👦",
-        "iconColor": "text-pink-500"
-      },
-      {
-        "time": "18:50",
-        "activity": "Twins Get Ready!",
-        "description": "Brush Teeth, Potty & Allergy Medicine",
-        "icon": "Pill",
-        "iconColor": "text-teal-500"
-      },
-      {
-        "time": "19:05",
-        "activity": "Story Time!",
-        "description": "Daddy Reads Books to Twins",
-        "icon": "Book",
-        "iconColor": "text-indigo-500"
-      },
-      {
-        "time": "20:15",
-        "activity": "Jack's Bedtime!",
-        "description": "Brush Teeth & Get Ready for Bed",
-        "icon": "Moon",
-        "iconColor": "text-violet-500"
-      },
-      {
-        "time": "20:30",
-        "activity": "All Kids Bedtime!",
-        "description": "Everyone Should Be in Bed",
-        "icon": "Moon",
-        "iconColor": "text-indigo-500"
-      }
-    ]
+  "eveningSteps": [
+    {
+      "id": "karate-prep",
+      "activity": "Get Ready for Jack & Sam!",
+      "description": "Get Ready for Karate",
+      "durationMinutes": 10,
+      "icon": "emoji:🥋",
+      "iconColor": "text-orange-500"
+    },
+    {
+      "id": "karate",
+      "activity": "Karate Time!",
+      "description": "Jack & Sam Leave for Karate",
+      "durationMinutes": 10,
+      "icon": "emoji:🥋",
+      "iconColor": "text-red-500"
+    },
+    {
+      "id": "dinner",
+      "activity": "Dinner Time!",
+      "description": "Family Dinner Together",
+      "durationMinutes": 40,
+      "icon": "ForkKnife",
+      "iconColor": "text-red-500"
+    },
+    {
+      "id": "cleanup",
+      "activity": "Clean Up Time!",
+      "description": "Clear the Table & Tidy Living Room",
+      "durationMinutes": 5,
+      "icon": "emoji:🧹",
+      "iconColor": "text-amber-500"
+    },
+    {
+      "id": "outfit",
+      "activity": "Pick Your Outfit!",
+      "description": "Twins Choose Tomorrow's School Clothes",
+      "durationMinutes": 5,
+      "icon": "emoji:👕",
+      "iconColor": "text-purple-500"
+    },
+    {
+      "id": "bath",
+      "activity": "Bath Time!",
+      "description": "Take Baths",
+      "durationMinutes": 30,
+      "icon": "emoji:🛁",
+      "iconColor": "text-blue-500"
+    },
+    {
+      "id": "family-activity",
+      "activity": "Family Activity!",
+      "description": "Fun Time Together",
+      "durationMinutes": 30,
+      "icon": "emoji:👨‍👩‍👧‍👦",
+      "iconColor": "text-pink-500"
+    },
+    {
+      "id": "twins-ready",
+      "activity": "Twins Get Ready!",
+      "description": "Brush Teeth, Potty & Allergy Medicine",
+      "durationMinutes": 15,
+      "icon": "Pill",
+      "iconColor": "text-teal-500"
+    },
+    {
+      "id": "story",
+      "activity": "Story Time!",
+      "description": "Daddy Reads Books to Twins",
+      "durationMinutes": 10,
+      "icon": "Book",
+      "iconColor": "text-indigo-500"
+    },
+    {
+      "id": "game-time",
+      "activity": "Game Time!",
+      "description": "Jack & Daddy Play Video Games",
+      "durationMinutes": 60,
+      "icon": "GameController",
+      "iconColor": "text-green-500"
+    },
+    {
+      "id": "jack-bed",
+      "activity": "Jack's Bedtime!",
+      "description": "Brush Teeth & Get Ready for Bed",
+      "durationMinutes": 15,
+      "icon": "Moon",
+      "iconColor": "text-violet-500"
+    },
+    {
+      "id": "all-bed",
+      "activity": "All Kids Bedtime!",
+      "description": "Everyone Should Be in Bed",
+      "durationMinutes": 15,
+      "icon": "Moon",
+      "iconColor": "text-indigo-500"
+    }
+  ],
+  "eveningPresets": {
+    "Monday": ["karate-prep", "karate", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
+    "Tuesday": ["dinner", "cleanup", "outfit", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
+    "Wednesday": ["karate-prep", "karate", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
+    "Thursday": ["dinner", "cleanup", "outfit", "twins-ready", "story", "jack-bed", "all-bed"],
+    "Friday": ["dinner", "cleanup", "bath", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
+    "Saturday": ["dinner", "cleanup", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
+    "Sunday": ["dinner", "cleanup", "twins-ready", "story", "jack-bed", "all-bed"]
   }
 }

@@ -4,11 +4,14 @@
 **Edit this file:** `public/routines.json` (in any text editor)
 
 ## ⏱️ Time Format
-All times use **24-hour time** in `HH:MM` format:
+
+**Morning steps** use **24-hour time** in `HH:MM` format:
 - **06:30** = 6:30 AM
 - **12:00** = noon
 - **17:30** = 5:30 PM
 - **20:30** = 8:30 PM
+
+**Evening steps** do **not** use clock times — they use `durationMinutes` (a positive number of minutes) instead.
 
 ## 🎨 Icon Reference
 
@@ -52,7 +55,7 @@ All times use **24-hour time** in `HH:MM` format:
 
 ## 📝 Common Edits
 
-### ✏️ Edit Activity Name
+### ✏️ Edit Activity Name (Morning)
 ```json
 {
   "time": "07:30",
@@ -63,12 +66,24 @@ All times use **24-hour time** in `HH:MM` format:
 }
 ```
 
-### ⏱️ Change Activity Time
+### ⏱️ Change Morning Activity Time
 ```json
 {
-  "time": "17:30",        // ← Change time
+  "time": "07:00",        // ← Change time (24-hour format)
+  "activity": "Breakfast Time!",
+  "description": "Eat Breakfast",
+  "icon": "ForkKnife",
+  "iconColor": "text-red-500"
+}
+```
+
+### 🌙 Edit Evening Step Duration
+```json
+{
+  "id": "dinner",
   "activity": "Dinner Time!",
-  "description": "Family Dinner",
+  "description": "Family Dinner Together",
+  "durationMinutes": 45,      // ← Change duration (in minutes)
   "icon": "ForkKnife",
   "iconColor": "text-red-500"
 }
@@ -77,9 +92,6 @@ All times use **24-hour time** in `HH:MM` format:
 ### 🎨 Change Icon
 ```json
 {
-  "time": "06:30",
-  "activity": "Wake Up!",
-  "description": "Time to get up",
   "icon": "Clock",           // ← Was "Toilet", now "Clock"
   "iconColor": "text-blue-500"
 }
@@ -93,41 +105,37 @@ All times use **24-hour time** in `HH:MM` format:
 }
 ```
 
-### ➕ Add New Step (Keep Time Order!)
+### ➕ Add New Evening Step
+1. Add to `eveningSteps` array:
 ```json
 {
-  "time": "15:30",
+  "id": "snack",
   "activity": "Snack Time!",
   "description": "Eat a healthy snack",
+  "durationMinutes": 15,
   "icon": "emoji:🍎",
   "iconColor": "text-red-500"
 }
-// Add somewhere between other afternoon steps, SORTED BY TIME
 ```
+2. Add `"snack"` to the relevant day in `eveningPresets`
 
-### ❌ Remove Step
-Just delete the entire `{ ... }` object. Example:
+### ❌ Remove Evening Step
+1. Delete the step from `eveningSteps`
+2. Remove its ID from all `eveningPresets` day arrays
 
-```json
-// Delete this whole block:
-{
-  "time": "19:15",
-  "activity": "Game Time!",
-  "description": "Jack & Daddy Play Video Games",
-  "icon": "GameController",
-  "iconColor": "text-green-500"
-}
-```
+Or, just toggle it off in the app UI before starting — no config edit needed!
 
 ## ✅ Checklist Before Saving
 
 - [ ] All `{` have matching `}`
-- [ ] All times are in correct order (06:30 before 06:40)
-- [ ] Time format is 24-hour `HH:MM` (e.g., 06:30 or 17:30)
-- [ ] Icon name is spelled correctly (Toilet not Tolit)
+- [ ] Morning times are in correct order (06:30 before 06:40)
+- [ ] Morning time format is 24-hour `HH:MM` (e.g., 06:30)
+- [ ] Evening steps have `durationMinutes` (positive number)
+- [ ] Evening step IDs are unique
+- [ ] All preset IDs reference valid step IDs
+- [ ] Icon names are spelled correctly (Toilet not Tolit)
 - [ ] Color class looks right (`text-blue-500` not `text-blue`)
 - [ ] No trailing commas (last item doesn't have `,`)
-- [ ] Using correct day name (Monday, Tuesday, etc.)
 
 ## 🧪 Test Your Changes
 
@@ -139,16 +147,19 @@ Just delete the entire `{ ... }` object. Example:
 ## 📍 Where Each Routine Appears
 
 ```
-weekdayMorning          → Monday through Friday mornings (school days)
-saturdayMorning         → Saturday mornings (ballet)
-eveningRoutines.Monday  → Monday evening (karate + bath)
-eveningRoutines.Tuesday → Tuesday evening (games + family time)
-eveningRoutines.Wednesday → Wednesday evening (karate + bath)
-eveningRoutines.Thursday → Thursday evening (family time)
-eveningRoutines.Friday  → Friday evening (games + bath)
-eveningRoutines.Saturday → Saturday evening (games + no school next day)
-eveningRoutines.Sunday  → Sunday evening (family time)
+weekdayMorning           → Monday through Friday mornings (school days)
+saturdayMorning          → Saturday mornings (ballet)
+eveningSteps             → All available evening activities (with durations)
+eveningPresets.Monday     → Default selection for Monday (karate + bath)
+eveningPresets.Tuesday    → Default selection for Tuesday (games + family time)
+eveningPresets.Wednesday  → Default selection for Wednesday (karate + bath)
+eveningPresets.Thursday   → Default selection for Thursday (family time)
+eveningPresets.Friday     → Default selection for Friday (games + bath)
+eveningPresets.Saturday   → Default selection for Saturday (games)
+eveningPresets.Sunday     → Default selection for Sunday (family time)
 ```
+
+**Note:** Evening presets are just defaults — you can toggle steps on/off and reorder them in the app each night before clicking Start.
 
 ## 🆘 Need More Help?
 

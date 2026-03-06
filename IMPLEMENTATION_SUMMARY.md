@@ -92,25 +92,26 @@ try {
 
 ### Config Validation (routineLoader.ts)
 1. **Imports** `public/routines.json` as static JSON
-2. **Checks structure**: weekdayMorning, saturdayMorning, eveningRoutines objects/arrays
-3. **Validates each step**:
-   - All required fields present
-   - `timeInMinutes` is 0-1439
-   - Icon name exists or has `emoji:` prefix
-   - Color class looks reasonable
-4. **Maps icons**: Converts `"Toilet"` → `Toilet` component
-5. **Returns** fully typed `RoutineStep[]` arrays or **throws error**
+2. **Checks structure**: weekdayMorning, saturdayMorning, eveningSteps, eveningPresets
+3. **Validates morning steps**: required fields, 24-hour time format, icon name, color class
+4. **Validates evening steps**: required fields, unique IDs, positive durationMinutes, icon name, color class
+5. **Validates presets**: all preset IDs must reference valid evening step IDs
+6. **Maps icons**: Converts `"Toilet"` → `Toilet` component
+7. **Returns** typed morning steps + evening steps/presets or **throws error**
 
 ### Runtime Usage (App.tsx)
 ```typescript
+// Morning routine (clock-based)
 const getDailyRoutine = (): RoutineStep[] => {
   if (!loadedRoutines) return [];
-  
   const dayOfWeek = getDayOfWeek(...);
-  let morningRoutine = dayOfWeek === 'Monday' ? loadedRoutines.weekdayMorning : ...
-  const eveningRoutine = loadedRoutines.eveningRoutines[dayOfWeek];
-  return [...morningRoutine, ...eveningRoutine];
+  if (isSchoolDay(...)) return loadedRoutines.weekdayMorning;
+  if (dayOfWeek === 'Saturday') return loadedRoutines.saturdayMorning;
+  return [];
 }
+
+// Evening routine (duration-based, user-selected)
+// User selects/reorders steps, clicks Start, countdown timer runs
 ```
 
 ---
@@ -240,23 +241,28 @@ npm run preview
 {
   "weekdayMorning": [
     {
-      "time": "6:30 AM",           // 12-hour format for display
-      "activity": "Jack Wake Up!",  // Main heading
+      "time": "06:30",               // 24-hour format HH:MM
+      "activity": "Jack Wake Up!",    // Main heading
       "description": "Brush & Potty", // Subtitle
-      "timeInMinutes": 390,        // 24-hour: (6*60)+30
-      "icon": "Toilet",            // Phosphor name or "emoji:🚽"
-      "iconColor": "text-blue-500" // Tailwind class
+      "icon": "Toilet",              // Phosphor name or "emoji:🚽"
+      "iconColor": "text-blue-500"   // Tailwind class
     }
   ],
   "saturdayMorning": [ /* similar structure */ ],
-  "eveningRoutines": {
-    "Monday": [ /* steps */ ],
-    "Tuesday": [ /* steps */ ],
-    "Wednesday": [ /* steps */ ],
-    "Thursday": [ /* steps */ ],
-    "Friday": [ /* steps */ ],
-    "Saturday": [ /* steps */ ],
-    "Sunday": [ /* steps */ ]
+  "eveningSteps": [
+    {
+      "id": "dinner",                    // Unique step ID
+      "activity": "Dinner Time!",        // Main heading
+      "description": "Family Dinner",    // Subtitle
+      "durationMinutes": 40,             // Duration in minutes
+      "icon": "ForkKnife",              // Phosphor name or emoji
+      "iconColor": "text-red-500"       // Tailwind class
+    }
+  ],
+  "eveningPresets": {
+    "Monday": ["dinner-prep", "dinner", "cleanup", ...],
+    "Tuesday": ["dinner-prep", "dinner", ...],
+    /* ... all 7 days */
   }
 }
 ```
@@ -266,10 +272,11 @@ npm run preview
 ## 🎓 For Future Developers
 
 - **routineLoader.ts**: Handles all config parsing & validation
-- **App.tsx getDailyRoutine()**: Simple lookup of loaded routines
+- **App.tsx getDailyRoutine()**: Returns morning steps only (clock-based)
+- **Evening routine**: Duration-based countdown with user step selection/reordering
 - **Config errors**: Caught at startup, prevents broken app
 - **Adding icons**: Just import + add to ICON_MAP in routineLoader.ts
-- **Adding properties**: Update RoutineStep interface in routineLoader.ts, validate in validateStep(), use in App.tsx
+- **Adding properties**: Update RoutineStep interface in routineLoader.ts, validate in validateMorningStep()/validateEveningStep(), use in App.tsx
 
 ---
 
