@@ -154,33 +154,56 @@ def switch_to_smart_hub() -> bool:
         return False
 
 
+def wake_tv_wol() -> None:
+    """Send Wake-on-LAN magic packet to wake the TV from standby."""
+    try:
+        from wakeonlan import send_magic_packet
+
+        TV_MAC = "10:2b:41:bf:61:29"
+        send_magic_packet(TV_MAC)
+        log.info("Wake-on-LAN packet sent to %s", TV_MAC)
+    except Exception as e:
+        log.warning("Wake-on-LAN failed: %s", e)
+
+
 def run_launch():
     log.info("=== Starting Morning Routine TV Launch ===")
 
     # Check if TV is reachable
     status = get_tv_status()
     if not status:
-        log.error("TV not reachable at %s", TV_IP)
-        sys.exit(1)
+        # TV may be in deep sleep — send WOL and wait
+        log.info("TV not reachable, sending Wake-on-LAN...")
+        wake_tv_wol()
+        for attempt in range(6):
+            time.sleep(5)
+            status = get_tv_status()
+            if status:
+                log.info("TV responded after WOL (attempt %d)", attempt + 1)
+                break
+        if not status:
+            log.error("TV not reachable at %s after WOL", TV_IP)
+            sys.exit(1)
 
     power = status.get("device", {}).get("PowerState", "unknown")
     log.info("TV power state: %s", power)
 
-    # If TV is in standby or art mode, try to wake it
+    # If TV is in standby/art mode, send WOL and wait for it to come up
     if power != "on":
-        log.info("Attempting to turn off Art Mode / wake TV...")
-        turn_off_art_mode()
-        time.sleep(5)
+        log.info("TV not fully on (state: %s), sending Wake-on-LAN...", power)
+        wake_tv_wol()
+        time.sleep(10)
 
-    # Launch the browser (REST API — no token needed)
-    if launch_browser():
-        log.info("=== Routine timer should now be on screen ===")
-    else:
-        # Fallback: try switching input first, then retry
-        log.info("Retrying after switching to Smart Hub...")
-        switch_to_smart_hub()
-        time.sleep(3)
-        launch_browser()
+    # Launch the browser via REST API (no WebSocket, no trust prompt)
+    for attempt in range(3):
+        if launch_browser():
+            log.info("=== Routine timer should now be on screen ===")
+            return
+        if attempt < 2:
+            log.info("Browser launch failed, retrying in 5s (attempt %d/3)...", attempt + 1)
+            time.sleep(5)
+
+    log.error("Browser launch failed after 3 attempts")
 
 
 def run_status():
