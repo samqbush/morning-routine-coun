@@ -8,6 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.venv
+scripts/.tv_token
+scripts/morning-routine.log
 dist
 dist-ssr
 *-dist
