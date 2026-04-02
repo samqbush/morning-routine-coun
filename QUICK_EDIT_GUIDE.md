@@ -26,7 +26,6 @@
 | 🚌 | "Bus" | School, transportation |
 | 💊 | "Pill" | Medicine, health |
 | 📖 | "Book" | Reading, stories |
-| 🎮 | "GameController" | Games, play time |
 | 🌙 | "Moon" | Bedtime, sleep |
 
 ### Emoji Icons (Use `emoji:` Prefix)
@@ -117,13 +116,11 @@
   "iconColor": "text-red-500"
 }
 ```
-2. Add `"snack"` to the relevant day in `eveningPresets`
+2. Add `"snack"` to the `eveningRoutine` array
 
 ### ❌ Remove Evening Step
 1. Delete the step from `eveningSteps`
-2. Remove its ID from all `eveningPresets` day arrays
-
-Or, just toggle it off in the app UI before starting — no config edit needed!
+2. Remove its ID from the `eveningRoutine` array
 
 ## ✅ Checklist Before Saving
 
@@ -132,7 +129,7 @@ Or, just toggle it off in the app UI before starting — no config edit needed!
 - [ ] Morning time format is 24-hour `HH:MM` (e.g., 06:30)
 - [ ] Evening steps have `durationMinutes` (positive number)
 - [ ] Evening step IDs are unique
-- [ ] All preset IDs reference valid step IDs
+- [ ] All `eveningRoutine` IDs reference valid step IDs
 - [ ] Icon names are spelled correctly (Toilet not Tolit)
 - [ ] Color class looks right (`text-blue-500` not `text-blue`)
 - [ ] No trailing commas (last item doesn't have `,`)
@@ -150,16 +147,10 @@ Or, just toggle it off in the app UI before starting — no config edit needed!
 weekdayMorning           → Monday through Friday mornings (school days)
 saturdayMorning          → Saturday mornings (ballet)
 eveningSteps             → All available evening activities (with durations)
-eveningPresets.Monday     → Default selection for Monday (karate + bath)
-eveningPresets.Tuesday    → Default selection for Tuesday (games + family time)
-eveningPresets.Wednesday  → Default selection for Wednesday (karate + bath)
-eveningPresets.Thursday   → Default selection for Thursday (family time)
-eveningPresets.Friday     → Default selection for Friday (games + bath)
-eveningPresets.Saturday   → Default selection for Saturday (games)
-eveningPresets.Sunday     → Default selection for Sunday (family time)
+eveningRoutine           → Ordered list of step IDs for the nightly routine
 ```
 
-**Note:** Evening presets are just defaults — you can toggle steps on/off and reorder them in the app each night before clicking Start.
+**Note:** The evening routine is the same every night. Use the 🛁 ↔ 👨‍👩‍👧‍👦 swap button in the app to trade bath and family activity on any given night.
 
 ## 🆘 Need More Help?
 

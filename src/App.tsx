@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, ArrowRight, ArrowUp, ArrowDown, Bug, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause, SkipForward } from '@phosphor-icons/react';
+import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause, SkipForward, ArrowsClockwise } from '@phosphor-icons/react';
 import { loadRoutines, RoutineStep, EveningStep } from '@/lib/routineLoader';
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
@@ -31,13 +31,12 @@ function App() {
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Evening routine state
-  const [eveningMode, setEveningMode] = useState<'select' | 'active' | 'complete'>('select');
+  const [eveningMode, setEveningMode] = useState<'idle' | 'active' | 'complete'>('idle');
   const [selectedSteps, setSelectedSteps] = useState<EveningStep[]>([]);
   const [currentEveningStep, setCurrentEveningStep] = useState(0);
   const [stepStartTime, setStepStartTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [pausedTimeRemaining, setPausedTimeRemaining] = useState<number | null>(null);
-  const [eveningInitialized, setEveningInitialized] = useState(false);
 
   // Show error screen if config failed to load
   if (routinesError) {
@@ -60,7 +59,7 @@ function App() {
                 <li><code className="font-mono">weekdayMorning</code> (array)</li>
                 <li><code className="font-mono">saturdayMorning</code> (array)</li>
                 <li><code className="font-mono">eveningSteps</code> (array with id, durationMinutes)</li>
-                <li><code className="font-mono">eveningPresets</code> (object with Mon-Sun keys → step ID arrays)</li>
+                <li><code className="font-mono">eveningRoutine</code> (array of step ID strings)</li>
               </ul>
               <p className="text-sm text-amber-800 mt-3">
                 Morning steps need: <code className="font-mono">time (24-hour HH:MM), activity, description, icon, iconColor</code>
@@ -102,22 +101,15 @@ function App() {
     return [];
   };
 
-  // Initialize evening preset based on day of week
-  const dayForPreset = getDayOfWeek(isDebugMode ? debugTime : currentTime);
-  const lastEveningPresetDayRef = useRef<typeof dayForPreset | null>(null);
-
+  // Initialize evening routine from config
   useEffect(() => {
     if (!loadedRoutines) return;
-    // Re-initialize whenever the day changes, even if already initialized
-    if (eveningInitialized && lastEveningPresetDayRef.current === dayForPreset) return;
-    const presetIds = loadedRoutines.eveningPresets[dayForPreset];
-    const steps = presetIds
+    const routineIds = loadedRoutines.eveningRoutine;
+    const steps = routineIds
       .map(id => loadedRoutines!.eveningSteps.find(s => s.id === id))
       .filter((s): s is EveningStep => s !== undefined);
     setSelectedSteps(steps);
-    setEveningInitialized(true);
-    lastEveningPresetDayRef.current = dayForPreset;
-  }, [dayForPreset, eveningInitialized]);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -363,23 +355,25 @@ function App() {
     }
   };
 
-  // Evening step selection helpers
-  const toggleStep = (step: EveningStep) => {
-    setSelectedSteps(prev => {
-      const exists = prev.find(s => s.id === step.id);
-      if (exists) return prev.filter(s => s.id !== step.id);
-      return [...prev, step];
-    });
-  };
+  // Swap bath and family-activity steps in the routine
+  const swapBathAndFamilyActivity = () => {
+    const bathIndex = selectedSteps.findIndex(s => s.id === 'bath');
+    const familyIndex = selectedSteps.findIndex(s => s.id === 'family-activity');
+    if (bathIndex === -1 || familyIndex === -1) return;
 
-  const moveStep = (index: number, direction: 'up' | 'down') => {
     setSelectedSteps(prev => {
       const newSteps = [...prev];
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= newSteps.length) return prev;
-      [newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]];
+      [newSteps[bathIndex], newSteps[familyIndex]] = [newSteps[familyIndex], newSteps[bathIndex]];
       return newSteps;
     });
+
+    // If currently on one of the swapped steps, reset the timer
+    const currentId = selectedSteps[currentEveningStep]?.id;
+    if (currentId === 'bath' || currentId === 'family-activity') {
+      setStepStartTime(Date.now());
+      setIsPaused(false);
+      setPausedTimeRemaining(null);
+    }
   };
 
   const startEveningRoutine = () => {
@@ -395,13 +389,15 @@ function App() {
   };
 
   const resetEveningRoutine = () => {
-    setEveningMode('select');
     setCurrentEveningStep(0);
-    setStepStartTime(null);
+    setStepStartTime(Date.now());
     setIsPaused(false);
     setPausedTimeRemaining(null);
-    // Re-initialize from preset
-    setEveningInitialized(false);
+    setEveningMode('active');
+    if (selectedSteps.length > 0) {
+      playStepChangeSound();
+      announceEveningActivity(selectedSteps[0]);
+    }
   };
 
   const skipEveningStep = () => {
@@ -756,6 +752,20 @@ function App() {
     }
   }, [currentStep, lastStep]);
 
+  // Auto-start evening routine when entering evening period
+  useEffect(() => {
+    if (currentStep === -3 && eveningMode === 'idle' && selectedSteps.length > 0) {
+      initializeAudio();
+      setEveningMode('active');
+      setCurrentEveningStep(0);
+      setStepStartTime(Date.now());
+      setIsPaused(false);
+      setPausedTimeRemaining(null);
+      playStepChangeSound();
+      announceEveningActivity(selectedSteps[0]);
+    }
+  }, [currentStep, eveningMode, selectedSteps.length]);
+
   // Helper to render a reusable timer color for evening
   const getEveningTimerColor = () => {
     const remaining = getEveningTimeRemaining();
@@ -928,7 +938,7 @@ function App() {
                 </div>
 
                 {/* Controls */}
-                <div className="flex justify-center gap-6 mt-8">
+                <div className="flex flex-wrap justify-center gap-6 mt-8">
                   <Button size="lg" variant="outline" onClick={togglePause} className="gap-3 text-2xl px-8 py-6">
                     {isPaused ? <Play size={32} /> : <Pause size={32} />}
                     {isPaused ? 'Resume' : 'Pause'}
@@ -937,8 +947,14 @@ function App() {
                     <SkipForward size={32} />
                     Skip
                   </Button>
+                  {selectedSteps.some(s => s.id === 'bath') && selectedSteps.some(s => s.id === 'family-activity') && (
+                    <Button size="lg" variant="outline" onClick={swapBathAndFamilyActivity} className="gap-3 text-2xl px-8 py-6">
+                      🛁 ↔ 👨‍👩‍👧‍👦
+                    </Button>
+                  )}
                   <Button size="lg" variant="destructive" onClick={resetEveningRoutine} className="gap-3 text-2xl px-8 py-6">
-                    Stop
+                    <ArrowsClockwise size={32} />
+                    Restart
                   </Button>
                 </div>
               </div>
@@ -991,123 +1007,15 @@ function App() {
       );
     }
 
-    // Evening selection screen (eveningMode === 'select')
-    const allEveningSteps = loadedRoutines?.eveningSteps ?? [];
-    const totalMinutes = selectedSteps.reduce((sum, s) => sum + s.durationMinutes, 0);
-    const totalHours = Math.floor(totalMinutes / 60);
-    const remainingMins = totalMinutes % 60;
-
+    // Evening idle — auto-start pending
     return (
-      <div className="min-h-screen bg-gradient-to-br from-accent/20 to-secondary/20 p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <TestModeButton />
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+        <TestModeButton />
+        <div className="w-full max-w-4xl space-y-8">
           {isDebugMode && <DebugControls />}
-
-          {/* Morning Complete Banner */}
-          {getDailyRoutine().length > 0 && (
-            <Card className="p-8 text-center">
-              <div className="flex items-center justify-center gap-4">
-                <CheckCircle size={48} className="text-accent" />
-                <h2 className="text-3xl font-black text-accent">Morning Routine Complete! 🎉</h2>
-              </div>
-            </Card>
-          )}
-
-          {/* Evening Routine Header */}
-          <Card className="p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-4xl font-black text-foreground">Evening Routine</h1>
-                <p className="text-xl text-muted-foreground mt-2">
-                  Select and order your activities for tonight
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-primary">
-                  {totalHours > 0 ? `${totalHours}h ${remainingMins}m` : `${remainingMins}m`}
-                </div>
-                <p className="text-lg text-muted-foreground">total time</p>
-              </div>
-            </div>
-
-            {/* Selected Steps - Reorderable */}
-            <div className="space-y-3 mb-8">
-              <h3 className="text-2xl font-bold mb-4">Tonight's Routine ({selectedSteps.length} steps)</h3>
-              {selectedSteps.length === 0 && (
-                <p className="text-xl text-muted-foreground py-8 text-center">No steps selected. Add steps from below.</p>
-              )}
-              {selectedSteps.map((step, index) => (
-                <div key={step.id} className="flex items-center gap-4 p-4 bg-primary/5 border-2 border-primary/20 rounded-lg">
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => moveStep(index, 'up')}
-                      disabled={index === 0}
-                      aria-label={`Move ${step.activity} up`}
-                      className="h-8 w-8 p-0"
-                    >
-                      <ArrowUp size={20} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => moveStep(index, 'down')}
-                      disabled={index === selectedSteps.length - 1}
-                      aria-label={`Move ${step.activity} down`}
-                      className="h-8 w-8 p-0"
-                    >
-                      <ArrowDown size={20} />
-                    </Button>
-                  </div>
-                  <step.icon size={40} className={step.iconColor} />
-                  <div className="flex-1">
-                    <div className="text-xl font-bold">{step.activity}</div>
-                    <div className="text-lg text-muted-foreground">{step.description}</div>
-                  </div>
-                  <Badge variant="secondary" className="text-lg px-3 py-1">{step.durationMinutes}m</Badge>
-                  <Button size="sm" variant="destructive" onClick={() => toggleStep(step)} className="text-lg px-4 py-2">
-                    Remove
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            {/* Available Steps to Add */}
-            {allEveningSteps.filter(s => !selectedSteps.find(sel => sel.id === s.id)).length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-2xl font-bold mb-4">Available Steps</h3>
-                {allEveningSteps
-                  .filter(s => !selectedSteps.find(sel => sel.id === s.id))
-                  .map(step => (
-                    <div key={step.id} className="flex items-center gap-4 p-4 bg-muted/30 border border-muted rounded-lg">
-                      <step.icon size={40} className={step.iconColor} />
-                      <div className="flex-1">
-                        <div className="text-xl font-bold">{step.activity}</div>
-                        <div className="text-lg text-muted-foreground">{step.description}</div>
-                      </div>
-                      <Badge variant="outline" className="text-lg px-3 py-1">{step.durationMinutes}m</Badge>
-                      <Button size="sm" variant="default" onClick={() => toggleStep(step)} className="text-lg px-4 py-2">
-                        Add
-                      </Button>
-                    </div>
-                  ))}
-              </div>
-            )}
+          <Card className="p-12 text-center">
+            <h1 className="text-5xl font-black text-primary animate-pulse">Starting Evening Routine...</h1>
           </Card>
-
-          {/* Start Button */}
-          <div className="flex justify-center">
-            <Button
-              size="lg"
-              onClick={startEveningRoutine}
-              disabled={selectedSteps.length === 0}
-              className="text-3xl px-12 py-8 gap-4"
-            >
-              <Play size={40} />
-              Start Evening Routine
-            </Button>
-          </div>
         </div>
       </div>
     );

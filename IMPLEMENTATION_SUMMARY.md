@@ -92,12 +92,12 @@ try {
 
 ### Config Validation (routineLoader.ts)
 1. **Imports** `public/routines.json` as static JSON
-2. **Checks structure**: weekdayMorning, saturdayMorning, eveningSteps, eveningPresets
+2. **Checks structure**: weekdayMorning, saturdayMorning, eveningSteps, eveningRoutine
 3. **Validates morning steps**: required fields, 24-hour time format, icon name, color class
 4. **Validates evening steps**: required fields, unique IDs, positive durationMinutes, icon name, color class
-5. **Validates presets**: all preset IDs must reference valid evening step IDs
+5. **Validates routine**: all evening routine IDs must reference valid evening step IDs
 6. **Maps icons**: Converts `"Toilet"` → `Toilet` component
-7. **Returns** typed morning steps + evening steps/presets or **throws error**
+7. **Returns** typed morning steps + evening steps/routine or **throws error**
 
 ### Runtime Usage (App.tsx)
 ```typescript
@@ -182,7 +182,7 @@ Done! Refresh browser. No rebuild needed.
 ```
 
 **User sees:**
-> Invalid icon name: "Tolit". Must be one of: Clock, CheckCircle, Toilet, ForkKnife, Backpack, Bus, Pill, Book, GameController, Moon, or use emoji: prefix (e.g., "emoji:🚗")
+> Invalid icon name: "Tolit". Must be one of: Clock, CheckCircle, Toilet, ForkKnife, Backpack, Bus, Pill, Book, Moon, or use emoji: prefix (e.g., "emoji:🚗")
 
 ---
 
@@ -259,11 +259,7 @@ npm run preview
       "iconColor": "text-red-500"       // Tailwind class
     }
   ],
-  "eveningPresets": {
-    "Monday": ["dinner-prep", "dinner", "cleanup", ...],
-    "Tuesday": ["dinner-prep", "dinner", ...],
-    /* ... all 7 days */
-  }
+  "eveningRoutine": ["dinner-prep", "get-drink", "dinner", "cleanup", "outfit", "bath", "family-activity", "bedtime-prep", "story", "all-bed"]
 }
 ```
 
@@ -273,7 +269,8 @@ npm run preview
 
 - **routineLoader.ts**: Handles all config parsing & validation
 - **App.tsx getDailyRoutine()**: Returns morning steps only (clock-based)
-- **Evening routine**: Duration-based countdown with user step selection/reordering
+- **Evening routine**: Duration-based countdown, auto-starts at 5:00 PM, same routine every night
+- **Swap button**: Lets user trade bath ↔ family activity during active routine
 - **Config errors**: Caught at startup, prevents broken app
 - **Adding icons**: Just import + add to ICON_MAP in routineLoader.ts
 - **Adding properties**: Update RoutineStep interface in routineLoader.ts, validate in validateMorningStep()/validateEveningStep(), use in App.tsx

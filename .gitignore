@@ -35,3 +35,6 @@ pids
 .devcontainer/
 
 .spark-workbench-id
+
+# Playwright MCP artifacts
+.playwright-mcp/

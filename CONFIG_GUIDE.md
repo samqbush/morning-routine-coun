@@ -9,11 +9,7 @@ The morning routine timer is now fully configurable through `public/routines.jso
   "weekdayMorning": [ /* Monday-Friday morning steps */ ],
   "saturdayMorning": [ /* Saturday morning steps */ ],
   "eveningSteps": [ /* All available evening steps with durations */ ],
-  "eveningPresets": {
-    "Monday": [ /* Step IDs for Monday's default */ ],
-    "Tuesday": [ /* Step IDs for Tuesday's default */ ],
-    /* ... Wed, Thu, Fri, Sat, Sun ... */
-  }
+  "eveningRoutine": [ /* Ordered step IDs for the nightly routine */ ]
 }
 ```
 
@@ -37,7 +33,7 @@ Use 24-hour time in `HH:MM` format, for example `06:30` or `07:30`.
 
 ## Evening Step Definition
 
-Evening steps use **duration in minutes** instead of fixed clock times. The user selects which steps to include and clicks "Start" to begin a countdown timer.
+Evening steps use **duration in minutes** instead of fixed clock times. The routine auto-starts when the TV launches at 5:00 PM — no user interaction needed.
 
 ```json
 {
@@ -50,23 +46,20 @@ Evening steps use **duration in minutes** instead of fixed clock times. The user
 }
 ```
 
-## Evening Presets
+## Evening Routine
 
-Presets define which steps are selected by default for each day. They are arrays of step IDs:
+The `eveningRoutine` array defines the ordered sequence of step IDs used every night:
 
 ```json
-"eveningPresets": {
-  "Monday": ["karate-prep", "karate", "dinner-prep", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
-  "Tuesday": ["dinner-prep", "dinner", "cleanup", "outfit", "family-activity", "twins-ready", "story", "game-time", "jack-bed", "all-bed"]
-}
+"eveningRoutine": ["dinner-prep", "get-drink", "dinner", "cleanup", "outfit", "bath", "family-activity", "bedtime-prep", "story", "all-bed"]
 ```
 
-The user can toggle steps on/off and reorder them before starting the routine.
+A **swap button** (🛁 ↔ 👨‍👩‍👧‍👦) in the app lets you trade bath and family activity on any given night.
 
 ### Icon Options
 
 **Built-in Phosphor Icons** (use icon name directly):
-- `Clock`, `CheckCircle`, `Toilet`, `ForkKnife`, `Backpack`, `Bus`, `Pill`, `Book`, `GameController`, `Moon`
+- `Clock`, `CheckCircle`, `Toilet`, `ForkKnife`, `Backpack`, `Bus`, `Pill`, `Book`, `Moon`
 
 **Emoji** (prefix with `emoji:`):
 - `"emoji:🚗"`, `"emoji:🩰"`, `"emoji:🥋"`, `"emoji:🛁"`, `"emoji:🧹"`, `"emoji:👕"`, `"emoji:👨‍👩‍👧‍👦"`
@@ -93,10 +86,10 @@ Common Tailwind text colors:
 }
 ```
 
-2. Add the step ID to the relevant **`eveningPresets`** day arrays:
+2. Add the step ID to the **`eveningRoutine`** array:
 
 ```json
-"Tuesday": ["dinner-prep", "snack", "dinner", "cleanup", ...]
+"eveningRoutine": ["dinner-prep", "get-drink", "snack", "dinner", "cleanup", ...]
 ```
 
 3. Save the file and refresh your browser (no rebuild needed in dev mode)
@@ -111,7 +104,7 @@ To change "Dinner Time" from 40 to 45 minutes:
 ## Example: Removing an Evening Step
 
 1. Remove the step object from the `eveningSteps` array
-2. Remove its ID from all `eveningPresets` day arrays
+2. Remove its ID from the `eveningRoutine` array
 
 ## Validation & Error Messages
 
@@ -130,7 +123,7 @@ If `public/routines.json` has errors, the app displays a **red error screen** wi
 ## Parent-Friendly Tips
 
 - **Copy entire blocks** when adding similar steps
-- **Evening steps can be toggled on/off** in the app before starting — no need to edit config for one-night changes
+- **Evening steps can be swapped** (bath ↔ family activity) using the swap button in the app — no config edit needed
 - **Use emoji for clarity** — parents can visually scan emoji icons when editing
 - **Test in Debug Mode** — click "Test Mode" button in the app to jump to any step and verify timings
 
@@ -140,6 +133,6 @@ If `public/routines.json` has errors, the app displays a **red error screen** wi
 |---------|----------|
 | App shows red error screen | Check error message; verify JSON syntax (use [jsonlint.com](https://jsonlint.com)) |
 | Morning step doesn't appear | Check the time format is 24-hour `HH:MM` and steps are ordered by time |
-| Evening step not in preset | Add its `id` to the appropriate day in `eveningPresets` |
+| Evening step not in routine | Add its `id` to the `eveningRoutine` array |
 | Icon doesn't display | Verify icon name is spelled correctly or emoji: prefix is used |
 | Color looks wrong | Check Tailwind color class spelling (e.g., `text-blue-500` not `text-blue500`) |

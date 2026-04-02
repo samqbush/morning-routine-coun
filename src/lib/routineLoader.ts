@@ -8,7 +8,6 @@ import {
   Bus,
   Pill,
   Book,
-  GameController,
   Moon,
 } from '@phosphor-icons/react';
 import routinesConfig from '../../public/routines.json';
@@ -32,8 +31,6 @@ export interface EveningStep {
   iconColor: string;
 }
 
-type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
-
 // Map icon name strings to Phosphor icon components
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Clock,
@@ -44,7 +41,6 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Bus,
   Pill,
   Book,
-  GameController,
   Moon,
 };
 
@@ -214,14 +210,14 @@ export function loadRoutines(): {
   weekdayMorning: RoutineStep[];
   saturdayMorning: RoutineStep[];
   eveningSteps: EveningStep[];
-  eveningPresets: Record<DayOfWeek, string[]>;
+  eveningRoutine: string[];
 } {
   try {
     if (!routinesConfig || typeof routinesConfig !== 'object') {
       throw new Error('Invalid routines config: must be a JSON object');
     }
 
-    const { weekdayMorning, saturdayMorning, eveningSteps, eveningPresets } = routinesConfig as any;
+    const { weekdayMorning, saturdayMorning, eveningSteps, eveningRoutine } = routinesConfig as any;
 
     if (!Array.isArray(weekdayMorning)) {
       throw new Error('Invalid routines config: "weekdayMorning" must be an array');
@@ -236,8 +232,8 @@ export function loadRoutines(): {
       throw new Error('Invalid routines config: "eveningSteps" must be an array');
     }
 
-    if (!eveningPresets || typeof eveningPresets !== 'object') {
-      throw new Error('Invalid routines config: "eveningPresets" must be an object');
+    if (!Array.isArray(eveningRoutine)) {
+      throw new Error('Invalid routines config: "eveningRoutine" must be an array of step IDs');
     }
 
     // Validate morning steps
@@ -256,16 +252,10 @@ export function loadRoutines(): {
       stepIds.add(step.id);
     }
 
-    // Validate evening presets
-    const validDays: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    for (const day of validDays) {
-      if (!Array.isArray(eveningPresets[day])) {
-        throw new Error(`Invalid routines config: eveningPresets.${day} must be an array of step IDs`);
-      }
-      for (const id of eveningPresets[day]) {
-        if (!stepIds.has(id)) {
-          throw new Error(`Invalid step ID "${id}" in eveningPresets.${day}. Available IDs: ${[...stepIds].join(', ')}`);
-        }
+    // Validate evening routine references
+    for (const id of eveningRoutine) {
+      if (typeof id !== 'string' || !stepIds.has(id)) {
+        throw new Error(`Invalid step ID "${id}" in eveningRoutine. Available IDs: ${[...stepIds].join(', ')}`);
       }
     }
 
@@ -294,7 +284,7 @@ export function loadRoutines(): {
       weekdayMorning: weekdayMorning.map((step, i) => convertMorningStep(step, 'weekdayMorning', i)),
       saturdayMorning: saturdayMorning.map((step, i) => convertMorningStep(step, 'saturdayMorning', i)),
       eveningSteps: parsedEveningSteps,
-      eveningPresets: eveningPresets as Record<DayOfWeek, string[]>,
+      eveningRoutine: eveningRoutine as string[],
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

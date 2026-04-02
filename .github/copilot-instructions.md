@@ -10,7 +10,7 @@ All application logic lives in [src/App.tsx](../src/App.tsx) (~1200 lines). This
 
 ### Routine System
 Routines are configuration-driven and loaded at runtime from [`public/routines.json`](../public/routines.json) via [`src/lib/routineLoader.ts`](../src/lib/routineLoader.ts).
-- **Morning routines** and **evening routines** (e.g., school prep, ballet, karate days, bath days, game time) are defined as data in `routines.json` rather than hardcoded arrays or conditional logic in `App.tsx`.
+- **Morning routines** (school prep, ballet) and a single **evening routine** (same every night) are defined as data in `routines.json` rather than hardcoded arrays or conditional logic in `App.tsx`.
 - The loader is responsible for parsing the JSON, validating it against the expected schema, and exposing the routines to `App.tsx`.
 
 Each configured step is a `RoutineStep` object with: `time`, `activity`, `description`, `timeInMinutes` (minutes since midnight), `icon`, `iconColor`, and `routineType: 'morning' | 'evening'`.

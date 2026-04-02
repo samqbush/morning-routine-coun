@@ -82,20 +82,20 @@
   ],
   "eveningSteps": [
     {
-      "id": "karate-prep",
-      "activity": "Get Ready for Jack & Sam!",
-      "description": "Get Ready for Karate",
-      "durationMinutes": 10,
-      "icon": "emoji:🥋",
+      "id": "dinner-prep",
+      "activity": "Dinner Prep!",
+      "description": "Cook & Prepare Dinner, Set the Table",
+      "durationMinutes": 25,
+      "icon": "emoji:🍳",
       "iconColor": "text-orange-500"
     },
     {
-      "id": "karate",
-      "activity": "Karate Time!",
-      "description": "Jack & Sam Leave for Karate",
-      "durationMinutes": 10,
-      "icon": "emoji:🥋",
-      "iconColor": "text-red-500"
+      "id": "get-drink",
+      "activity": "Get Your Drink!",
+      "description": "Kids Get Their Drinks for Dinner",
+      "durationMinutes": 5,
+      "icon": "emoji:🥤",
+      "iconColor": "text-blue-500"
     },
     {
       "id": "dinner",
@@ -109,14 +109,14 @@
       "id": "cleanup",
       "activity": "Clean Up Time!",
       "description": "Clear the Table & Tidy Living Room",
-      "durationMinutes": 5,
+      "durationMinutes": 15,
       "icon": "emoji:🧹",
       "iconColor": "text-amber-500"
     },
     {
       "id": "outfit",
       "activity": "Pick Your Outfit!",
-      "description": "Twins Choose Tomorrow's School Clothes",
+      "description": "Kids Choose Tomorrow's School Clothes",
       "durationMinutes": 5,
       "icon": "emoji:👕",
       "iconColor": "text-purple-500"
@@ -138,53 +138,29 @@
       "iconColor": "text-pink-500"
     },
     {
-      "id": "twins-ready",
-      "activity": "Twins Get Ready!",
-      "description": "Brush Teeth, Potty & Allergy Medicine",
-      "durationMinutes": 15,
+      "id": "bedtime-prep",
+      "activity": "Get Ready for Bed!",
+      "description": "All Kids Brush Teeth, Potty & Allergy Medicine",
+      "durationMinutes": 20,
       "icon": "Pill",
       "iconColor": "text-teal-500"
     },
     {
       "id": "story",
       "activity": "Story Time!",
-      "description": "Daddy Reads Books to Twins",
-      "durationMinutes": 10,
+      "description": "Read Books Together",
+      "durationMinutes": 20,
       "icon": "Book",
       "iconColor": "text-indigo-500"
     },
     {
-      "id": "game-time",
-      "activity": "Game Time!",
-      "description": "Jack & Daddy Play Video Games",
-      "durationMinutes": 60,
-      "icon": "GameController",
-      "iconColor": "text-green-500"
-    },
-    {
-      "id": "jack-bed",
-      "activity": "Jack's Bedtime!",
-      "description": "Brush Teeth & Get Ready for Bed",
-      "durationMinutes": 15,
-      "icon": "Moon",
-      "iconColor": "text-violet-500"
-    },
-    {
       "id": "all-bed",
-      "activity": "All Kids Bedtime!",
-      "description": "Everyone Should Be in Bed",
-      "durationMinutes": 15,
+      "activity": "Bedtime!",
+      "description": "All Kids in Bed — Lights Out!",
+      "durationMinutes": 20,
       "icon": "Moon",
       "iconColor": "text-indigo-500"
     }
   ],
-  "eveningPresets": {
-    "Monday": ["karate-prep", "karate", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
-    "Tuesday": ["dinner", "cleanup", "outfit", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
-    "Wednesday": ["karate-prep", "karate", "dinner", "cleanup", "outfit", "bath", "twins-ready", "story", "jack-bed", "all-bed"],
-    "Thursday": ["dinner", "cleanup", "outfit", "twins-ready", "story", "jack-bed", "all-bed"],
-    "Friday": ["dinner", "cleanup", "bath", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
-    "Saturday": ["dinner", "cleanup", "twins-ready", "story", "game-time", "jack-bed", "all-bed"],
-    "Sunday": ["dinner", "cleanup", "twins-ready", "story", "jack-bed", "all-bed"]
-  }
+  "eveningRoutine": ["dinner-prep", "get-drink", "dinner", "cleanup", "outfit", "bath", "family-activity", "bedtime-prep", "story", "all-bed"]
 }
