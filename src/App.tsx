@@ -3,10 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause, SkipForward, ArrowsClockwise } from '@phosphor-icons/react';
+import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause, SkipForward, ArrowsClockwise, Sun } from '@phosphor-icons/react';
 import { loadRoutines, RoutineStep, EveningStep } from '@/lib/routineLoader';
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
+// Evening routine won't auto-start until this time (5:00 PM)
+const EVENING_START_MINUTES = 17 * 60;
 
 // Load routines from config at app startup
 let loadedRoutines: ReturnType<typeof loadRoutines> | null = null;
@@ -752,9 +755,10 @@ function App() {
     }
   }, [currentStep, lastStep]);
 
-  // Auto-start evening routine when entering evening period
+  // Auto-start evening routine when entering evening period (only after 5 PM)
   useEffect(() => {
-    if (currentStep === -3 && eveningMode === 'idle' && selectedSteps.length > 0) {
+    const timeInMinutes = getCurrentTimeInMinutes();
+    if (currentStep === -3 && eveningMode === 'idle' && selectedSteps.length > 0 && timeInMinutes >= EVENING_START_MINUTES) {
       initializeAudio();
       setEveningMode('active');
       setCurrentEveningStep(0);
@@ -764,7 +768,7 @@ function App() {
       playStepChangeSound();
       announceEveningActivity(selectedSteps[0]);
     }
-  }, [currentStep, eveningMode, selectedSteps.length]);
+  }, [currentStep, eveningMode, selectedSteps.length, currentTime]);
 
   // Helper to render a reusable timer color for evening
   const getEveningTimerColor = () => {
@@ -1007,14 +1011,52 @@ function App() {
       );
     }
 
-    // Evening idle — auto-start pending
+    // Evening idle — show "Morning Complete" screen until 5 PM, then auto-start
+    const timeInMinutes = getCurrentTimeInMinutes();
+    const isEveningTime = timeInMinutes >= EVENING_START_MINUTES;
+
+    if (isEveningTime) {
+      // Past 5 PM but still idle — brief loading state (auto-start effect will fire)
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+          <TestModeButton />
+          <div className="w-full max-w-4xl space-y-8">
+            {isDebugMode && <DebugControls />}
+            <Card className="p-12 text-center">
+              <h1 className="text-5xl font-black text-primary animate-pulse">Starting Evening Routine...</h1>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    // Before 5 PM — morning is done, waiting for evening
+    const minutesUntilEvening = EVENING_START_MINUTES - timeInMinutes;
+    const hoursUntil = Math.floor(minutesUntilEvening / 60);
+    const minsUntil = minutesUntilEvening % 60;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center p-8">
         <TestModeButton />
         <div className="w-full max-w-4xl space-y-8">
           {isDebugMode && <DebugControls />}
           <Card className="p-12 text-center">
-            <h1 className="text-5xl font-black text-primary animate-pulse">Starting Evening Routine...</h1>
+            <div className="space-y-8">
+              <Sun size={120} className="text-yellow-500 mx-auto" weight="fill" />
+              <h1 className="text-6xl font-black text-primary">Morning Complete! ☀️</h1>
+              <p className="text-3xl font-semibold text-muted-foreground">Enjoy your day!</p>
+              <div className="text-5xl font-black text-secondary">
+                {hoursUntil > 0 ? `${hoursUntil}h ${minsUntil}m` : `${minsUntil}m`}
+              </div>
+              <p className="text-xl text-muted-foreground">until evening routine starts at 5:00 PM</p>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={startEveningRoutine}
+                className="text-2xl px-8 py-6 mt-4"
+              >
+                Start Evening Early
+              </Button>
+            </div>
           </Card>
         </div>
       </div>
