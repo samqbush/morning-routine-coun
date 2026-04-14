@@ -12,6 +12,7 @@
  *   public/audio/manifest.json   — { key: { text, file } }
  *
  * Usage:  npm run generate-audio
+ *         npm run generate-audio -- --force   (regenerate all, even existing)
  * Requires: macOS with `say` command, `ffmpeg` installed
  */
 
@@ -30,11 +31,14 @@ function keyToFilename(key) {
   return key.replace(/\./g, '-') + '.mp3';
 }
 
+const force = process.argv.includes('--force');
+let failures = 0;
+
 function generateMp3(text, filename) {
   const aiffPath = join(AUDIO_DIR, filename.replace('.mp3', '.aiff'));
   const mp3Path = join(AUDIO_DIR, filename);
 
-  if (existsSync(mp3Path)) {
+  if (existsSync(mp3Path) && !force) {
     console.log(`  ✓ exists: ${filename}`);
     return;
   }
@@ -47,6 +51,7 @@ function generateMp3(text, filename) {
   } catch (err) {
     console.error(`  ✗ FAILED: ${filename} — ${err.message}`);
     if (existsSync(aiffPath)) unlinkSync(aiffPath);
+    failures++;
   }
 }
 
@@ -91,7 +96,7 @@ routines.saturdayMorning.forEach((step, i) => {
 add('morning.jack.get-ready',
   'Jack: Get ready to start your routine!');
 
-routines.weekdayMorningJack.forEach((step, i) => {
+(routines.weekdayMorningJack || []).forEach((step, i) => {
   const msg = `Jack: Time for ${step.activity}! ${step.description}`;
   add(`morning.jack.step.${i}`, msg);
 });
@@ -101,7 +106,7 @@ routines.weekdayMorningJack.forEach((step, i) => {
 add('morning.twins.get-ready',
   'Ava and Dana: Get ready to start your routine!');
 
-routines.weekdayMorningTwins.forEach((step, i) => {
+(routines.weekdayMorningTwins || []).forEach((step, i) => {
   const msg = `Ava and Dana: Time for ${step.activity}! ${step.description}`;
   add(`morning.twins.step.${i}`, msg);
 });
@@ -139,4 +144,10 @@ writeFileSync(
 );
 
 console.log(`\n✓ Manifest written: public/audio/manifest.json (${entries.length} entries)`);
+
+if (failures > 0) {
+  console.error(`\n✗ ${failures} file(s) failed to generate. Fix errors above and re-run.`);
+  process.exit(1);
+}
+
 console.log('Done!\n');
