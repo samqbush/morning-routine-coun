@@ -471,9 +471,9 @@ function App() {
       audioKey = 'evening.complete';
     } else if (step && loadedRoutines) {
       message = `Time for ${step.activity}! ${step.description}. You have ${step.durationMinutes} minutes.`;
-      // Find step's original index in the eveningRoutine config array
-      const originalIndex = loadedRoutines.eveningRoutine.indexOf(step.id);
-      if (originalIndex >= 0) audioKey = `evening.step.${originalIndex}`;
+      // Use position in selectedSteps (runtime order, respects bath/family swap)
+      const runtimeIndex = selectedSteps.findIndex(s => s.id === step.id);
+      if (runtimeIndex >= 0) audioKey = `evening.step.${runtimeIndex}`;
     }
     if (message) speakMessage(message, audioKey ? [audioKey] : undefined);
   };
