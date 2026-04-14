@@ -1,0 +1,142 @@
+{
+  "morning.shared.get-ready": {
+    "text": "Good morning! Get ready to start your routine!",
+    "file": "morning-shared-get-ready.mp3"
+  },
+  "morning.shared.good-night": {
+    "text": "Good night! See you tomorrow morning!",
+    "file": "morning-shared-good-night.mp3"
+  },
+  "morning.shared.complete": {
+    "text": "Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!",
+    "file": "morning-shared-complete.mp3"
+  },
+  "morning.shared.step.0": {
+    "text": "Time for Jack Wake Up!! Jack: Brush Teeth & Potty",
+    "file": "morning-shared-step-0.mp3"
+  },
+  "morning.shared.step.1": {
+    "text": "Time for Jack Breakfast Time!! Jack: Eat Breakfast",
+    "file": "morning-shared-step-1.mp3"
+  },
+  "morning.shared.step.2": {
+    "text": "Time for Jack Get Ready!! Jack: Pack Snacks, Water, Put on Shoes",
+    "file": "morning-shared-step-2.mp3"
+  },
+  "morning.shared.step.3": {
+    "text": "Time for Ava & Dana Wake Up!! Ava & Dana: Brush Teeth & Potty",
+    "file": "morning-shared-step-3.mp3"
+  },
+  "morning.shared.step.4": {
+    "text": "Time for Jack School Time!! Jack: Leave for School Bus",
+    "file": "morning-shared-step-4.mp3"
+  },
+  "morning.shared.step.5": {
+    "text": "Time for Ava & Dana Socks & Shoes! Ava & Dana: Put on Socks & Shoes",
+    "file": "morning-shared-step-5.mp3"
+  },
+  "morning.shared.step.6": {
+    "text": "Time for Ava & Dana School Time!! Get in the Car - Leaving in 5 Minutes!",
+    "file": "morning-shared-step-6.mp3"
+  },
+  "morning.shared.step.7": {
+    "text": "Time for Morning Complete!! Time for a Break",
+    "file": "morning-shared-step-7.mp3"
+  },
+  "morning.saturday.step.0": {
+    "text": "Time for Breakfast Time!! Eat Breakfast",
+    "file": "morning-saturday-step-0.mp3"
+  },
+  "morning.saturday.step.1": {
+    "text": "Time for Get Ready!! Get Dressed and Ready",
+    "file": "morning-saturday-step-1.mp3"
+  },
+  "morning.saturday.step.2": {
+    "text": "Time for Ballet Time!! Go to Ballet for Ava and Dana",
+    "file": "morning-saturday-step-2.mp3"
+  },
+  "morning.jack.get-ready": {
+    "text": "Jack: Get ready to start your routine!",
+    "file": "morning-jack-get-ready.mp3"
+  },
+  "morning.jack.step.0": {
+    "text": "Jack: Time for Wake Up! Brush Teeth & Potty",
+    "file": "morning-jack-step-0.mp3"
+  },
+  "morning.jack.step.1": {
+    "text": "Jack: Time for Breakfast Time! Eat Breakfast",
+    "file": "morning-jack-step-1.mp3"
+  },
+  "morning.jack.step.2": {
+    "text": "Jack: Time for Get Ready! Pack Snacks, Water, Put on Shoes",
+    "file": "morning-jack-step-2.mp3"
+  },
+  "morning.jack.step.3": {
+    "text": "Jack: Time for School Time! Leave for School Bus",
+    "file": "morning-jack-step-3.mp3"
+  },
+  "morning.twins.get-ready": {
+    "text": "Ava and Dana: Get ready to start your routine!",
+    "file": "morning-twins-get-ready.mp3"
+  },
+  "morning.twins.step.0": {
+    "text": "Ava and Dana: Time for Wake Up! Brush Teeth & Potty",
+    "file": "morning-twins-step-0.mp3"
+  },
+  "morning.twins.step.1": {
+    "text": "Ava and Dana: Time for Socks & Shoes! Put on Socks & Shoes",
+    "file": "morning-twins-step-1.mp3"
+  },
+  "morning.twins.step.2": {
+    "text": "Ava and Dana: Time for School Time! Get in the Car - Leaving in 5 Minutes!",
+    "file": "morning-twins-step-2.mp3"
+  },
+  "morning.twins.step.3": {
+    "text": "Ava and Dana: Time for Morning Complete! Time for a Break",
+    "file": "morning-twins-step-3.mp3"
+  },
+  "evening.step.0": {
+    "text": "Time for Dinner Prep!! Cook & Prepare Dinner, Set the Table. You have 25 minutes.",
+    "file": "evening-step-0.mp3"
+  },
+  "evening.step.1": {
+    "text": "Time for Get Your Drink!! Kids Get Their Drinks for Dinner. You have 5 minutes.",
+    "file": "evening-step-1.mp3"
+  },
+  "evening.step.2": {
+    "text": "Time for Dinner Time!! Family Dinner Together. You have 40 minutes.",
+    "file": "evening-step-2.mp3"
+  },
+  "evening.step.3": {
+    "text": "Time for Clean Up Time!! Clear the Table & Tidy Living Room. You have 15 minutes.",
+    "file": "evening-step-3.mp3"
+  },
+  "evening.step.4": {
+    "text": "Time for Pick Your Outfit!! Kids Choose Tomorrow's School Clothes. You have 5 minutes.",
+    "file": "evening-step-4.mp3"
+  },
+  "evening.step.5": {
+    "text": "Time for Bath Time!! Take Baths. You have 30 minutes.",
+    "file": "evening-step-5.mp3"
+  },
+  "evening.step.6": {
+    "text": "Time for Family Activity!! Fun Time Together. You have 30 minutes.",
+    "file": "evening-step-6.mp3"
+  },
+  "evening.step.7": {
+    "text": "Time for Get Ready for Bed!! All Kids Brush Teeth, Potty & Allergy Medicine. You have 20 minutes.",
+    "file": "evening-step-7.mp3"
+  },
+  "evening.step.8": {
+    "text": "Time for Story Time!! Read Books Together. You have 20 minutes.",
+    "file": "evening-step-8.mp3"
+  },
+  "evening.step.9": {
+    "text": "Time for Bedtime!! All Kids in Bed — Lights Out!. You have 20 minutes.",
+    "file": "evening-step-9.mp3"
+  },
+  "evening.complete": {
+    "text": "Great job! The evening routine is complete. Now it's Sam and Jill time!",
+    "file": "evening-complete.mp3"
+  }
+}

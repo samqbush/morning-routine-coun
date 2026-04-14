@@ -7,9 +7,15 @@ import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause
 import { loadRoutines, RoutineStep, EveningStep } from '@/lib/routineLoader';
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+type MorningPlan = 'dual' | 'shared' | 'none';
+type MorningView = 'jack-only' | 'split' | 'twins-only' | 'shared';
+type AppState = 'late-night' | 'before-start' | 'morning-active' | 'morning-complete';
 
 // Evening routine won't auto-start until this time (5:00 PM)
 const EVENING_START_MINUTES = 17 * 60;
+
+// Minutes after last step before routine is considered "done"
+const LAST_STEP_WINDOW = 5;
 
 // Load routines from config at app startup
 let loadedRoutines: ReturnType<typeof loadRoutines> | null = null;
@@ -26,12 +32,14 @@ function App() {
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [debugTime, setDebugTime] = useState(new Date());
   const [debugDay, setDebugDay] = useState<DayOfWeek | null>(null);
-  const [lastStep, setLastStep] = useState<number>(-3);
+  const [lastStepJack, setLastStepJack] = useState<number>(-3);
+  const [lastStepTwins, setLastStepTwins] = useState<number>(-3);
+  const [lastStepShared, setLastStepShared] = useState<number>(-3);
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
-  const [activityNotification, setActivityNotification] = useState<string | null>(null);
   const [speechAvailable, setSpeechAvailable] = useState(true);
-  const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [audioManifest, setAudioManifest] = useState<Record<string, { text: string; file: string }> | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Evening routine state
   const [eveningMode, setEveningMode] = useState<'idle' | 'active' | 'complete'>('idle');
@@ -76,6 +84,8 @@ function App() {
     );
   }
 
+  // ─── Day & Routine Helpers ────────────────────────────────────────────
+
   const getDayOfWeek = (date: Date): DayOfWeek => {
     if (isDebugMode && debugDay) {
       return debugDay;
@@ -90,12 +100,8 @@ function App() {
   };
 
   const getDailyRoutine = (): RoutineStep[] => {
-    if (!loadedRoutines) {
-      return [];
-    }
-    
+    if (!loadedRoutines) return [];
     const dayOfWeek = getDayOfWeek(isDebugMode ? debugTime : currentTime);
-    
     if (isSchoolDay(isDebugMode ? debugTime : currentTime)) {
       return loadedRoutines.weekdayMorning;
     } else if (dayOfWeek === 'Saturday') {
@@ -103,6 +109,167 @@ function App() {
     }
     return [];
   };
+
+  const getMorningPlan = (): MorningPlan => {
+    if (!loadedRoutines) return 'none';
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    const dayOfWeek = getDayOfWeek(timeToUse);
+    if (isSchoolDay(timeToUse) && loadedRoutines.weekdayMorningJack.length > 0 && loadedRoutines.weekdayMorningTwins.length > 0) {
+      return 'dual';
+    }
+    if (dayOfWeek === 'Saturday' && loadedRoutines.saturdayMorning.length > 0) {
+      return 'shared';
+    }
+    if (isSchoolDay(timeToUse) && loadedRoutines.weekdayMorning.length > 0) {
+      return 'shared';
+    }
+    return 'none';
+  };
+
+  const getCurrentTimeInMinutes = () => {
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    return timeToUse.getHours() * 60 + timeToUse.getMinutes();
+  };
+
+  const getCurrentTimeInSeconds = () => {
+    const timeToUse = isDebugMode ? debugTime : currentTime;
+    return timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
+  };
+
+  // ─── Parameterized Computation Functions ──────────────────────────────
+
+  const getCurrentStepForRoutine = (routine: RoutineStep[]): number => {
+    const timeInMinutes = getCurrentTimeInMinutes();
+    if (routine.length === 0) return -3;
+    if (timeInMinutes < routine[0].timeInMinutes) return -2;
+
+    for (let i = routine.length - 1; i >= 0; i--) {
+      if (timeInMinutes >= routine[i].timeInMinutes) {
+        const nextStepTime = i + 1 < routine.length
+          ? routine[i + 1].timeInMinutes
+          : routine[i].timeInMinutes + LAST_STEP_WINDOW;
+        if (timeInMinutes < nextStepTime) {
+          return i;
+        }
+      }
+    }
+    return -3;
+  };
+
+  const getTimeUntilNextStepForRoutine = (routine: RoutineStep[]): number => {
+    const step = getCurrentStepForRoutine(routine);
+    const currentSec = getCurrentTimeInSeconds();
+
+    if (step === -2) {
+      if (routine.length === 0) return 0;
+      return Math.max(0, routine[0].timeInMinutes * 60 - currentSec);
+    }
+    if (step < 0 || step >= routine.length) return 0;
+
+    const nextStepTime = step + 1 < routine.length
+      ? routine[step + 1].timeInMinutes
+      : routine[step].timeInMinutes + LAST_STEP_WINDOW;
+    return Math.max(0, nextStepTime * 60 - currentSec);
+  };
+
+  const getStepDurationForRoutine = (routine: RoutineStep[]): number => {
+    const step = getCurrentStepForRoutine(routine);
+
+    if (step === -2) {
+      if (routine.length === 0) return 300;
+      const currentSec = getCurrentTimeInSeconds();
+      return Math.max(1, routine[0].timeInMinutes * 60 - currentSec);
+    }
+    if (step < 0 || step >= routine.length) return 300;
+
+    const nextStepTime = step + 1 < routine.length
+      ? routine[step + 1].timeInMinutes
+      : routine[step].timeInMinutes + LAST_STEP_WINDOW;
+    return (nextStepTime - routine[step].timeInMinutes) * 60;
+  };
+
+  const getTimerColorForRoutine = (routine: RoutineStep[]): string => {
+    const duration = getStepDurationForRoutine(routine);
+    const remaining = getTimeUntilNextStepForRoutine(routine);
+    const pct = duration > 0 ? remaining / duration : 0;
+    if (pct > 0.5) {
+      const g2y = (pct - 0.5) * 2;
+      return `rgb(${Math.round(255 * (1 - g2y))}, 255, 0)`;
+    }
+    const y2r = pct * 2;
+    return `rgb(255, ${Math.round(255 * y2r)}, 0)`;
+  };
+
+  const getProgressForRoutine = (routine: RoutineStep[]): number => {
+    const step = getCurrentStepForRoutine(routine);
+    if (step < 0) return step === -3 ? 100 : 0;
+    const timeInMinutes = getCurrentTimeInMinutes();
+    let completed = 0;
+    for (let i = 0; i < routine.length; i++) {
+      const next = i + 1 < routine.length ? routine[i + 1].timeInMinutes : routine[i].timeInMinutes + LAST_STEP_WINDOW;
+      if (timeInMinutes >= next) completed++;
+      else break;
+    }
+    return (completed / routine.length) * 100;
+  };
+
+  // Legacy wrappers that operate on the shared/combined daily routine
+  const getCurrentStep = () => getCurrentStepForRoutine(getDailyRoutine());
+  const getTimeUntilNextStep = () => getTimeUntilNextStepForRoutine(getDailyRoutine());
+  const getStepDuration = () => getStepDurationForRoutine(getDailyRoutine());
+  const getTimerColor = () => getTimerColorForRoutine(getDailyRoutine());
+  const getProgressPercentage = () => getProgressForRoutine(getDailyRoutine());
+
+  // ─── App-Level State Machine ──────────────────────────────────────────
+
+  const getAppState = (): AppState => {
+    const timeInMinutes = getCurrentTimeInMinutes();
+    if (timeInMinutes > 21 * 60) return 'late-night';
+
+    const plan = getMorningPlan();
+    if (plan === 'none') return 'morning-complete';
+
+    if (plan === 'dual' && loadedRoutines) {
+      const jackStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningJack);
+      const twinsStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningTwins);
+      if (jackStep === -2 && twinsStep === -2) return 'before-start';
+      if (jackStep === -3 && twinsStep === -3) return 'morning-complete';
+      // At least one routine is active or not yet started while the other is active
+      return 'morning-active';
+    }
+
+    // shared plan
+    const sharedStep = getCurrentStep();
+    if (sharedStep === -2) return 'before-start';
+    if (sharedStep === -1) return 'late-night';
+    if (sharedStep === -3) return 'morning-complete';
+    if (sharedStep >= 0) return 'morning-active';
+    return 'morning-complete';
+  };
+
+  const getMorningView = (): MorningView => {
+    const plan = getMorningPlan();
+    if (plan !== 'dual' || !loadedRoutines) return 'shared';
+
+    const jackStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningJack);
+    const twinsStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningTwins);
+
+    const jackActive = jackStep >= 0;
+    const jackDone = jackStep === -3;
+    const twinsActive = twinsStep >= 0;
+    const twinsNotStarted = twinsStep === -2;
+
+    if (jackActive && twinsNotStarted) return 'jack-only';
+    if (jackActive && twinsActive) return 'split';
+    if (jackDone && twinsActive) return 'twins-only';
+    // Edge: both before-start shouldn't reach here (appState would be before-start)
+    // Edge: jack before-start, twins active (unlikely given times but handle)
+    if (twinsActive) return 'twins-only';
+    if (jackActive) return 'jack-only';
+    return 'shared';
+  };
+
+  // ─── Effects ──────────────────────────────────────────────────────────
 
   // Initialize evening routine from config
   useEffect(() => {
@@ -118,86 +285,62 @@ function App() {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Check speech synthesis availability on mount
+  // Check speech synthesis availability and load audio manifest on mount
   useEffect(() => {
     const checkSpeechAvailability = () => {
-      // Check if speechSynthesis exists
       if (!('speechSynthesis' in window)) {
         setSpeechAvailable(false);
         return;
       }
-
-      // Try to detect Samsung TV browser
       const userAgent = navigator.userAgent.toLowerCase();
-      const isSamsungTV = userAgent.includes('tizen') || 
+      const isSamsungTV = userAgent.includes('tizen') ||
                           (userAgent.includes('samsung') && userAgent.includes('smart-tv'));
-      
       if (isSamsungTV) {
         setSpeechAvailable(false);
         console.warn('Samsung TV detected - Speech Synthesis not supported');
         return;
       }
-
-      // Rely on feature/UA detection; some browsers require user gesture before speak()
       setSpeechAvailable(true);
     };
-
     checkSpeechAvailability();
+
+    // Load pre-generated audio manifest for fallback TTS
+    const basePath = import.meta.env.BASE_URL || '/';
+    fetch(`${basePath}audio/manifest.json`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setAudioManifest(data); })
+      .catch(() => {});
   }, []);
 
-  // Cleanup notification timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
-      }
-    };
-  }, []);
+  // ─── Audio & Speech ───────────────────────────────────────────────────
 
-  // Initialize audio context on first user interaction
   const initializeAudio = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
   };
 
-  // Play notification sound
   const playStepChangeSound = () => {
     initializeAudio();
-    
     if (!audioContextRef.current) return;
-    
     try {
       const ctx = audioContextRef.current;
-      
-      // Create a pleasant chime sound
       const oscillator1 = ctx.createOscillator();
       const oscillator2 = ctx.createOscillator();
       const gainNode = ctx.createGain();
-      
-      // Connect nodes
       oscillator1.connect(gainNode);
       oscillator2.connect(gainNode);
       gainNode.connect(ctx.destination);
-      
-      // Set frequencies for a pleasant chord (C major)
-      oscillator1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      oscillator2.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
-      
-      // Set wave types
+      oscillator1.frequency.setValueAtTime(523.25, ctx.currentTime);
+      oscillator2.frequency.setValueAtTime(659.25, ctx.currentTime);
       oscillator1.type = 'sine';
       oscillator2.type = 'sine';
-      
-      // Create envelope
       gainNode.gain.setValueAtTime(0, ctx.currentTime);
       gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.1);
       gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
-      
-      // Start and stop
       const startTime = ctx.currentTime;
       oscillator1.start(startTime);
       oscillator2.start(startTime);
@@ -208,169 +351,144 @@ function App() {
     }
   };
 
-  // Announce activity using speech synthesis
-  const announceActivity = (stepIndex: number) => {
-    // If the user has turned voice off, do not speak or show fallback notifications
-    if (!speechEnabled) {
-      return;
+  // Play pre-generated audio files sequentially by manifest keys
+  const playAudioByKeys = (keys: string[]) => {
+    if (!audioManifest || keys.length === 0) return;
+
+    // Stop any currently playing audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
     }
 
-    // If speech is unavailable, show visual notification instead
-    if (!speechAvailable || !('speechSynthesis' in window)) {
-      showActivityNotification(stepIndex);
-      return;
-    }
-    
-    try {
-      window.speechSynthesis.cancel();
-      
-      let message = '';
-      const DAILY_ROUTINE = getDailyRoutine();
-      
-      if (stepIndex === -2) {
-        message = 'Good morning! Get ready to start your routine!';
-      } else if (stepIndex === -1) {
-        message = 'Good night! See you tomorrow morning!';
-      } else if (stepIndex >= DAILY_ROUTINE.length) {
-        message = 'Great job! Now it\'s Sam and Jill time. Mommy and Daddy can relax together!';
-      } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
-        const activity = DAILY_ROUTINE[stepIndex];
-        message = `Time for ${activity.activity}! ${activity.description}`;
-      }
-      
-      if (message) {
+    const basePath = import.meta.env.BASE_URL || '/';
+    let index = 0;
+
+    const playNext = () => {
+      if (index >= keys.length) return;
+      const entry = audioManifest[keys[index]];
+      if (!entry) { index++; playNext(); return; }
+
+      const audio = new Audio(`${basePath}audio/${entry.file}`);
+      currentAudioRef.current = audio;
+      audio.onended = () => { index++; playNext(); };
+      audio.onerror = () => { index++; playNext(); };
+      audio.play().catch(() => { index++; playNext(); });
+    };
+
+    playNext();
+  };
+
+  const speakMessage = (message: string, audioKeys?: string[]) => {
+    if (!speechEnabled) return;
+
+    // Try browser speech synthesis first (works on desktop/mobile)
+    if (speechAvailable && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.rate = 0.9;
         utterance.pitch = 1.1;
         utterance.volume = 0.8;
-        
         const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(voice => 
-          voice.name.includes('Samantha') || 
-          voice.name.includes('Karen') || 
+        const preferredVoice = voices.find(voice =>
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Karen') ||
           voice.name.includes('Daniel') ||
           voice.lang.startsWith('en-')
         );
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        }
-        
-        // Add error handler to fallback to visual notification if speech fails
+        if (preferredVoice) utterance.voice = preferredVoice;
         utterance.onerror = () => {
           setSpeechAvailable(false);
-          showActivityNotification(stepIndex);
         };
-        
         window.speechSynthesis.speak(utterance);
+        return;
+      } catch {
+        setSpeechAvailable(false);
       }
-    } catch (error) {
-      console.warn('Speech synthesis failed:', error);
-      setSpeechAvailable(false);
-      // Fallback to visual notification
-      showActivityNotification(stepIndex);
+    }
+
+    // Fallback: play pre-generated audio (works on Samsung TV)
+    if (audioKeys && audioKeys.length > 0) {
+      playAudioByKeys(audioKeys);
     }
   };
 
-  // Show visual notification for activity changes
-  const dismissNotification = () => {
-    setActivityNotification(null);
-    if (notificationTimeoutRef.current) {
-      clearTimeout(notificationTimeoutRef.current);
-      notificationTimeoutRef.current = null;
+  // Build a speech message and audio key for a step change in a given routine
+  const buildStepMessage = (stepIndex: number, routine: RoutineStep[], label: string): string => {
+    if (stepIndex === -2) return `${label}: Get ready to start your routine!`;
+    if (stepIndex === -3) return '';
+    if (stepIndex >= 0 && stepIndex < routine.length) {
+      return `${label}: Time for ${routine[stepIndex].activity}! ${routine[stepIndex].description}`;
     }
+    return '';
   };
 
-  const showActivityNotification = (stepIndex: number) => {
-    let message = '';
+  const buildStepAudioKey = (stepIndex: number, keyPrefix: string): string => {
+    if (stepIndex === -2) return `${keyPrefix}.get-ready`;
+    if (stepIndex >= 0) return `${keyPrefix}.step.${stepIndex}`;
+    return '';
+  };
+
+  // Get the audio key prefix for shared/legacy mode based on current day
+  const getSharedAudioPrefix = (): string => {
+    const dayOfWeek = getDayOfWeek(isDebugMode ? debugTime : currentTime);
+    return dayOfWeek === 'Saturday' ? 'morning.saturday' : 'morning.shared';
+  };
+
+  // Announce for shared/legacy single-routine mode
+  const announceActivity = (stepIndex: number) => {
+    if (!speechEnabled) return;
     const DAILY_ROUTINE = getDailyRoutine();
-    
+    const prefix = getSharedAudioPrefix();
+    let message = '';
+    let audioKey = '';
     if (stepIndex === -2) {
       message = 'Good morning! Get ready to start your routine!';
+      audioKey = 'morning.shared.get-ready';
     } else if (stepIndex === -1) {
       message = 'Good night! See you tomorrow morning!';
+      audioKey = 'morning.shared.good-night';
     } else if (stepIndex >= DAILY_ROUTINE.length) {
-      message = 'Great job! Now it\'s Sam and Jill time. Mommy and Daddy can relax together!';
+      message = "Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!";
+      audioKey = 'morning.shared.complete';
     } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
-      const activity = DAILY_ROUTINE[stepIndex];
-      message = `Time for ${activity.activity}!\n${activity.description}`;
+      message = `Time for ${DAILY_ROUTINE[stepIndex].activity}! ${DAILY_ROUTINE[stepIndex].description}`;
+      audioKey = `${prefix}.step.${stepIndex}`;
     }
-    
-    if (message) {
-      // Clear any existing timeout
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
-      }
-      
-      setActivityNotification(message);
-      // Auto-hide after 8 seconds
-      notificationTimeoutRef.current = setTimeout(() => {
-        dismissNotification();
-      }, 8000);
-    }
+    if (message) speakMessage(message, audioKey ? [audioKey] : undefined);
   };
+
+
 
   // Announce evening activity using speech synthesis
   const announceEveningActivity = (step: EveningStep | null, isComplete?: boolean) => {
     if (!speechEnabled) return;
-
     let message = '';
+    let audioKey = '';
     if (isComplete) {
-      message = 'Great job! The evening routine is complete. Now it\'s Sam and Jill time!';
-    } else if (step) {
+      message = "Great job! The evening routine is complete. Now it's Sam and Jill time!";
+      audioKey = 'evening.complete';
+    } else if (step && loadedRoutines) {
       message = `Time for ${step.activity}! ${step.description}. You have ${step.durationMinutes} minutes.`;
+      // Use position in selectedSteps (runtime order, respects bath/family swap)
+      const runtimeIndex = selectedSteps.findIndex(s => s.id === step.id);
+      if (runtimeIndex >= 0) audioKey = `evening.step.${runtimeIndex}`;
     }
-
-    if (!message) return;
-
-    if (!speechAvailable || !('speechSynthesis' in window)) {
-      if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
-      setActivityNotification(message);
-      notificationTimeoutRef.current = setTimeout(() => dismissNotification(), 8000);
-      return;
-    }
-
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.1;
-      utterance.volume = 0.8;
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice =>
-        voice.name.includes('Samantha') ||
-        voice.name.includes('Karen') ||
-        voice.name.includes('Daniel') ||
-        voice.lang.startsWith('en-')
-      );
-      if (preferredVoice) utterance.voice = preferredVoice;
-      utterance.onerror = () => {
-        setSpeechAvailable(false);
-        if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
-        setActivityNotification(message);
-        notificationTimeoutRef.current = setTimeout(() => dismissNotification(), 8000);
-      };
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      setSpeechAvailable(false);
-      if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
-      setActivityNotification(message);
-      notificationTimeoutRef.current = setTimeout(() => dismissNotification(), 8000);
-    }
+    if (message) speakMessage(message, audioKey ? [audioKey] : undefined);
   };
 
-  // Swap bath and family-activity steps in the routine
+  // ─── Evening Routine Functions ────────────────────────────────────────
+
   const swapBathAndFamilyActivity = () => {
     const bathIndex = selectedSteps.findIndex(s => s.id === 'bath');
     const familyIndex = selectedSteps.findIndex(s => s.id === 'family-activity');
     if (bathIndex === -1 || familyIndex === -1) return;
-
     setSelectedSteps(prev => {
       const newSteps = [...prev];
       [newSteps[bathIndex], newSteps[familyIndex]] = [newSteps[familyIndex], newSteps[bathIndex]];
       return newSteps;
     });
-
-    // If currently on one of the swapped steps, reset the timer
     const currentId = selectedSteps[currentEveningStep]?.id;
     if (currentId === 'bath' || currentId === 'family-activity') {
       setStepStartTime(Date.now());
@@ -403,13 +521,10 @@ function App() {
     }
   };
 
-  const skipEveningStep = () => {
-    advanceEveningStep();
-  };
+  const skipEveningStep = () => advanceEveningStep();
 
   const togglePause = () => {
     if (isPaused) {
-      // Resume: set new start time based on remaining time
       if (pausedTimeRemaining !== null) {
         const durationSeconds = selectedSteps[currentEveningStep].durationMinutes * 60;
         const elapsed = durationSeconds - pausedTimeRemaining;
@@ -418,9 +533,7 @@ function App() {
       setIsPaused(false);
       setPausedTimeRemaining(null);
     } else {
-      // Pause: store remaining time
-      const remaining = getEveningTimeRemaining();
-      setPausedTimeRemaining(remaining);
+      setPausedTimeRemaining(getEveningTimeRemaining());
       setIsPaused(true);
     }
   };
@@ -454,50 +567,137 @@ function App() {
     return selectedSteps[currentEveningStep].durationMinutes * 60;
   };
 
+  const getEveningTimerColor = () => {
+    const remaining = getEveningTimeRemaining();
+    const duration = getEveningStepDuration();
+    const pct = duration > 0 ? remaining / duration : 0;
+    if (pct > 0.5) {
+      const g2y = (pct - 0.5) * 2;
+      return `rgb(${Math.round(255 * (1 - g2y))}, 255, 0)`;
+    }
+    const y2r = pct * 2;
+    return `rgb(255, ${Math.round(255 * y2r)}, 0)`;
+  };
+
   // Evening timer tick
   useEffect(() => {
     if (eveningMode !== 'active' || isPaused) return;
     const interval = setInterval(() => {
-      const remaining = getEveningTimeRemaining();
-      if (remaining <= 0) {
-        advanceEveningStep();
-      }
+      if (getEveningTimeRemaining() <= 0) advanceEveningStep();
     }, 500);
     return () => clearInterval(interval);
   }, [eveningMode, isPaused, currentEveningStep, stepStartTime, selectedSteps]);
 
+  // ─── Step Change Tracking ─────────────────────────────────────────────
+
+  const appState = getAppState();
+  const morningPlan = getMorningPlan();
+  const morningView = getMorningView();
+
+  // Per-child step tracking for dual mode
+  useEffect(() => {
+    if (morningPlan !== 'dual' || !loadedRoutines) return;
+
+    const jackStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningJack);
+    const twinsStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningTwins);
+    const jackChanged = jackStep !== lastStepJack;
+    const twinsChanged = twinsStep !== lastStepTwins;
+
+    if (!jackChanged && !twinsChanged) return;
+
+    const messages: string[] = [];
+    const audioKeys: string[] = [];
+
+    if (jackChanged) {
+      const msg = buildStepMessage(jackStep, loadedRoutines.weekdayMorningJack, 'Jack');
+      if (msg) {
+        messages.push(msg);
+        const key = buildStepAudioKey(jackStep, 'morning.jack');
+        if (key) audioKeys.push(key);
+      }
+      setLastStepJack(jackStep);
+    }
+
+    if (twinsChanged) {
+      const msg = buildStepMessage(twinsStep, loadedRoutines.weekdayMorningTwins, 'Ava and Dana');
+      if (msg) {
+        messages.push(msg);
+        const key = buildStepAudioKey(twinsStep, 'morning.twins');
+        if (key) audioKeys.push(key);
+      }
+      setLastStepTwins(twinsStep);
+    }
+
+    // Only announce "all done" when BOTH routines are complete
+    if (jackStep === -3 && twinsStep === -3 && (jackChanged || twinsChanged)) {
+      messages.length = 0;
+      audioKeys.length = 0;
+      messages.push("Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!");
+      audioKeys.push('morning.shared.complete');
+    }
+
+    if (messages.length > 0) {
+      playStepChangeSound();
+      speakMessage(messages.join(' '), audioKeys);
+    }
+  }, [currentTime, debugTime, morningPlan]);
+
+  // Shared/legacy step tracking
+  useEffect(() => {
+    if (morningPlan === 'dual') return;
+    const step = getCurrentStep();
+    if (step !== lastStepShared) {
+      if (lastStepShared >= -3 && lastStepShared !== step) {
+        playStepChangeSound();
+        announceActivity(step);
+      }
+      setLastStepShared(step);
+    }
+  }, [currentTime, debugTime, morningPlan]);
+
+  // Auto-start evening routine when morning is truly complete (only after 5 PM)
+  useEffect(() => {
+    const timeInMinutes = getCurrentTimeInMinutes();
+    if (appState === 'morning-complete' && eveningMode === 'idle' && selectedSteps.length > 0 && timeInMinutes >= EVENING_START_MINUTES) {
+      initializeAudio();
+      setEveningMode('active');
+      setCurrentEveningStep(0);
+      setStepStartTime(Date.now());
+      setIsPaused(false);
+      setPausedTimeRemaining(null);
+      playStepChangeSound();
+      announceEveningActivity(selectedSteps[0]);
+    }
+  }, [appState, eveningMode, selectedSteps.length, currentTime]);
+
+  // ─── Debug Helpers ────────────────────────────────────────────────────
+
+  const setDebugTimeFromMinutes = (mins: number) => {
+    const newTime = new Date();
+    newTime.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+    setDebugTime(newTime);
+  };
+
   const setDebugTimeToStep = (stepIndex: number) => {
     initializeAudio();
-    
     const DAILY_ROUTINE = getDailyRoutine();
-    
     if (stepIndex === -1) {
-      const newTime = new Date();
-      newTime.setHours(22, 0, 0, 0);
-      setDebugTime(newTime);
+      setDebugTimeFromMinutes(22 * 60);
     } else if (stepIndex === -2) {
-      const newTime = new Date();
-      newTime.setHours(6, 15, 0, 0);
-      setDebugTime(newTime);
+      setDebugTimeFromMinutes(6 * 60 + 15);
     } else if (stepIndex === -3) {
-      // After morning — set time past last morning step
-      if (DAILY_ROUTINE.length > 0) {
-        const lastStep = DAILY_ROUTINE[DAILY_ROUTINE.length - 1];
-        const breakTime = lastStep.timeInMinutes + 5;
-        const newTime = new Date();
-        newTime.setHours(Math.floor(breakTime / 60), breakTime % 60, 0, 0);
-        setDebugTime(newTime);
+      if (morningPlan === 'dual' && loadedRoutines) {
+        const allSteps = [...loadedRoutines.weekdayMorningJack, ...loadedRoutines.weekdayMorningTwins];
+        const lastTime = Math.max(...allSteps.map(s => s.timeInMinutes));
+        setDebugTimeFromMinutes(lastTime + LAST_STEP_WINDOW + 1);
+      } else if (DAILY_ROUTINE.length > 0) {
+        const last = DAILY_ROUTINE[DAILY_ROUTINE.length - 1];
+        setDebugTimeFromMinutes(last.timeInMinutes + 5);
       }
     } else if (stepIndex >= DAILY_ROUTINE.length) {
-      const newTime = new Date();
-      newTime.setHours(21, 0, 0, 0);
-      setDebugTime(newTime);
-    } else {
-      const stepTime = DAILY_ROUTINE[stepIndex].timeInMinutes;
-      const newTime = new Date();
-      newTime.setHours(Math.floor(stepTime / 60), stepTime % 60, 0, 0);
-      setDebugTime(newTime);
-      
+      setDebugTimeFromMinutes(21 * 60);
+    } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
+      setDebugTimeFromMinutes(DAILY_ROUTINE[stepIndex].timeInMinutes);
       setTimeout(() => {
         playStepChangeSound();
         announceActivity(stepIndex);
@@ -505,11 +705,30 @@ function App() {
     }
   };
 
-  // Debug controls component
+  const setDebugTimeToRoutineStep = (routine: RoutineStep[], stepIndex: number, label: string) => {
+    initializeAudio();
+    if (stepIndex >= 0 && stepIndex < routine.length) {
+      setDebugTimeFromMinutes(routine[stepIndex].timeInMinutes);
+      setTimeout(() => {
+        playStepChangeSound();
+        speakMessage(`${label}: Time for ${routine[stepIndex].activity}!`);
+      }, 100);
+    }
+  };
+
+  const formatTimeRemaining = (seconds: number) => {
+    if (seconds === 0) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // ─── Debug Controls ───────────────────────────────────────────────────
+
   const DebugControls = () => {
     const DAILY_ROUTINE = getDailyRoutine();
     const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
+
     return (
     <Card className="p-6 border-2 border-destructive">
       <div className="space-y-4">
@@ -517,19 +736,22 @@ function App() {
           <Bug size={24} className="text-destructive" />
           <h3 className="text-xl font-bold text-destructive">Debug Mode - Test Different Times & Days</h3>
         </div>
-        
+
         <div className="text-sm text-muted-foreground">
           Current debug time: {(isDebugMode ? debugTime : currentTime).toLocaleTimeString()}
           {debugDay && <span className="ml-2 font-semibold">({debugDay})</span>}
+          <span className="ml-2">Plan: <Badge variant="outline">{morningPlan}</Badge></span>
+          <span className="ml-2">View: <Badge variant="outline">{morningView}</Badge></span>
+          <span className="ml-2">State: <Badge variant="outline">{appState}</Badge></span>
         </div>
 
         <div className="space-y-2">
           <h4 className="text-sm font-semibold">Select Day of Week:</h4>
           <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
             {days.map((day) => (
-              <Button 
+              <Button
                 key={day}
-                size="sm" 
+                size="sm"
                 variant={debugDay === day ? "default" : "outline"}
                 onClick={() => setDebugDay(day)}
               >
@@ -539,22 +761,59 @@ function App() {
           </div>
         </div>
 
+        {morningPlan === 'dual' && loadedRoutines ? (
+          <>
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-blue-600">Jack's Steps:</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {loadedRoutines.weekdayMorningJack.map((step, index) => (
+                  <Button key={`jack-${index}`} size="sm" variant="outline" onClick={() => setDebugTimeToRoutineStep(loadedRoutines!.weekdayMorningJack, index, 'Jack')}>
+                    {step.time} - {step.activity}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-pink-600">Twins' Steps:</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {loadedRoutines.weekdayMorningTwins.map((step, index) => (
+                  <Button key={`twins-${index}`} size="sm" variant="outline" onClick={() => setDebugTimeToRoutineStep(loadedRoutines!.weekdayMorningTwins, index, 'Ava & Dana')}>
+                    {step.time} - {step.activity}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold">Jump to Activity:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
+                Before Start (6:15 AM)
+              </Button>
+              {DAILY_ROUTINE.map((step, index) => (
+                <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
+                  {step.time} - {step.activity}
+                </Button>
+              ))}
+              <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
+                Finished (9:00 PM)
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
+                Late Night (10:00 PM)
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Jump to Activity:</h4>
+          <h4 className="text-sm font-semibold">Special States:</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
               Before Start (6:15 AM)
             </Button>
-            {DAILY_ROUTINE.map((step, index) => (
-              <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
-                {step.time} - {step.activity}
-              </Button>
-            ))}
             <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-3)}>
               Break Time (After Morning)
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
-              Finished (9:00 PM)
             </Button>
             <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
               Late Night (10:00 PM)
@@ -563,9 +822,9 @@ function App() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <Button 
-            size="sm" 
-            variant="secondary" 
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={() => {
               setIsDebugMode(false);
               setDebugTime(new Date());
@@ -574,26 +833,34 @@ function App() {
           >
             Exit Debug Mode
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => playStepChangeSound()}
             className="gap-2"
           >
             <SpeakerHigh size={16} />
             Test Sound
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => announceActivity(getCurrentStep())}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (morningPlan === 'dual' && loadedRoutines) {
+                const jackStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningJack);
+                const msg = buildStepMessage(jackStep, loadedRoutines.weekdayMorningJack, 'Jack');
+                if (msg) speakMessage(msg);
+              } else {
+                announceActivity(getCurrentStep());
+              }
+            }}
             className="gap-2"
           >
             {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
             Test Voice
           </Button>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             variant={speechEnabled ? "default" : "secondary"}
             onClick={() => setSpeechEnabled(!speechEnabled)}
             className="gap-2"
@@ -606,185 +873,8 @@ function App() {
     </Card>
   );};
 
-  const getCurrentTimeInMinutes = () => {
-    const timeToUse = isDebugMode ? debugTime : currentTime;
-    return timeToUse.getHours() * 60 + timeToUse.getMinutes();
-  };
+  // ─── Render Test Mode Button ──────────────────────────────────────────
 
-  const getCurrentStep = () => {
-    const timeInMinutes = getCurrentTimeInMinutes();
-    const DAILY_ROUTINE = getDailyRoutine();
-    
-    if (timeInMinutes > 21 * 60) {
-      return -1;
-    }
-    
-    // No morning routine today — go straight to evening selection
-    if (DAILY_ROUTINE.length === 0) {
-      return -3;
-    }
-
-    if (timeInMinutes < DAILY_ROUTINE[0].timeInMinutes) {
-      return -2;
-    }
-    
-    // Morning-only routine: find current step or mark as done
-    for (let i = DAILY_ROUTINE.length - 1; i >= 0; i--) {
-      if (timeInMinutes >= DAILY_ROUTINE[i].timeInMinutes) {
-        const nextStepTime = i + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[i + 1].timeInMinutes : DAILY_ROUTINE[i].timeInMinutes + 15;
-        if (timeInMinutes < nextStepTime) {
-          return i;
-        }
-      }
-    }
-    
-    // Past all morning steps
-    return -3;
-  };
-
-  const getTimeUntilNextStep = () => {
-    const currentStep = getCurrentStep();
-    const DAILY_ROUTINE = getDailyRoutine();
-    
-    if (currentStep === -2) {
-      const timeToUse = isDebugMode ? debugTime : currentTime;
-      const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
-      if (DAILY_ROUTINE.length === 0) return 0;
-      const firstStepTimeInSeconds = DAILY_ROUTINE[0].timeInMinutes * 60;
-      return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
-    }
-    
-    if (currentStep >= DAILY_ROUTINE.length || currentStep < 0) {
-      return 0;
-    }
-    
-    const timeToUse = isDebugMode ? debugTime : currentTime;
-    const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
-    
-    const nextStepTime = currentStep + 1 < DAILY_ROUTINE.length 
-      ? DAILY_ROUTINE[currentStep + 1].timeInMinutes 
-      : DAILY_ROUTINE[currentStep].timeInMinutes + 15;
-    
-    const nextStepTimeInSeconds = nextStepTime * 60;
-    
-    return Math.max(0, nextStepTimeInSeconds - currentTimeInSeconds);
-  };
-
-  const formatTimeRemaining = (seconds: number) => {
-    if (seconds === 0) return "00:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getProgressPercentage = () => {
-    const currentStep = getCurrentStep();
-    if (currentStep < 0) return 0;
-    
-    const timeInMinutes = getCurrentTimeInMinutes();
-    const DAILY_ROUTINE = getDailyRoutine();
-    
-    let completedSteps = 0;
-    for (let i = 0; i < DAILY_ROUTINE.length; i++) {
-      const nextStepTime = i + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[i + 1].timeInMinutes : DAILY_ROUTINE[i].timeInMinutes + 15;
-      if (timeInMinutes >= nextStepTime) {
-        completedSteps++;
-      } else {
-        break;
-      }
-    }
-    
-    const totalSteps = DAILY_ROUTINE.length;
-    return (completedSteps / totalSteps) * 100;
-  };
-
-  const getStepDuration = () => {
-    const currentStep = getCurrentStep();
-    const DAILY_ROUTINE = getDailyRoutine();
-    
-    if (currentStep === -2) {
-      const timeToUse = isDebugMode ? debugTime : currentTime;
-      const currentTimeInSeconds = timeToUse.getHours() * 3600 + timeToUse.getMinutes() * 60 + timeToUse.getSeconds();
-      if (DAILY_ROUTINE.length === 0) return 300;
-      const firstStepTimeInSeconds = DAILY_ROUTINE[0].timeInMinutes * 60;
-      return Math.max(0, (firstStepTimeInSeconds - currentTimeInSeconds));
-    }
-    
-    if (currentStep < 0 || currentStep >= DAILY_ROUTINE.length) {
-      return 300;
-    }
-    
-    const nextStepTime = currentStep + 1 < DAILY_ROUTINE.length 
-      ? DAILY_ROUTINE[currentStep + 1].timeInMinutes 
-      : DAILY_ROUTINE[currentStep].timeInMinutes + 15;
-    
-    const stepDurationInMinutes = nextStepTime - DAILY_ROUTINE[currentStep].timeInMinutes;
-    return stepDurationInMinutes * 60;
-  };
-
-  // Get color based on time remaining percentage
-  const getTimerColor = () => {
-    const stepDuration = getStepDuration();
-    const timeRemainingSeconds = getTimeUntilNextStep();
-    const percentageRemaining = stepDuration > 0 ? timeRemainingSeconds / stepDuration : 0;
-    
-    // Green (good time) to yellow (moderate) to red (urgent)
-    if (percentageRemaining > 0.5) {
-      // Green to yellow transition (100% = green, 50% = yellow)
-      const greenToYellow = (percentageRemaining - 0.5) * 2;
-      return `rgb(${Math.round(255 * (1 - greenToYellow))}, 255, 0)`;
-    } else {
-      // Yellow to red transition (50% = yellow, 0% = red)
-      const yellowToRed = percentageRemaining * 2;
-      return `rgb(255, ${Math.round(255 * yellowToRed)}, 0)`;
-    }
-  };
-
-  const currentStep = getCurrentStep();
-  const timeRemaining = getTimeUntilNextStep();
-  const progressPercentage = getProgressPercentage();
-  const DAILY_ROUTINE = getDailyRoutine();
-
-  useEffect(() => {
-    if (currentStep !== lastStep) {
-      if (lastStep >= -3 && lastStep !== currentStep) {
-        playStepChangeSound();
-        announceActivity(currentStep);
-      }
-      setLastStep(currentStep);
-    }
-  }, [currentStep, lastStep]);
-
-  // Auto-start evening routine when entering evening period (only after 5 PM)
-  useEffect(() => {
-    const timeInMinutes = getCurrentTimeInMinutes();
-    if (currentStep === -3 && eveningMode === 'idle' && selectedSteps.length > 0 && timeInMinutes >= EVENING_START_MINUTES) {
-      initializeAudio();
-      setEveningMode('active');
-      setCurrentEveningStep(0);
-      setStepStartTime(Date.now());
-      setIsPaused(false);
-      setPausedTimeRemaining(null);
-      playStepChangeSound();
-      announceEveningActivity(selectedSteps[0]);
-    }
-  }, [currentStep, eveningMode, selectedSteps.length, currentTime]);
-
-  // Helper to render a reusable timer color for evening
-  const getEveningTimerColor = () => {
-    const remaining = getEveningTimeRemaining();
-    const duration = getEveningStepDuration();
-    const percentageRemaining = duration > 0 ? remaining / duration : 0;
-    if (percentageRemaining > 0.5) {
-      const greenToYellow = (percentageRemaining - 0.5) * 2;
-      return `rgb(${Math.round(255 * (1 - greenToYellow))}, 255, 0)`;
-    } else {
-      const yellowToRed = percentageRemaining * 2;
-      return `rgb(255, ${Math.round(255 * yellowToRed)}, 0)`;
-    }
-  };
-
-  // Render Test Mode button (reusable)
   const TestModeButton = () => !isDebugMode ? (
     <div className="fixed top-4 right-4 z-50">
       <Button
@@ -803,10 +893,201 @@ function App() {
     </div>
   ) : null;
 
-  if (currentStep === -3) {
-    // Morning complete — show evening routine UI
+
+  // ─── Reusable Timer Panel ─────────────────────────────────────────────
+
+  const renderTimerPanel = (config: {
+    routine: RoutineStep[];
+    currentStep: number;
+    timeRemaining: number;
+    stepDuration: number;
+    timerColor: string;
+    progress: number;
+    label: string;
+    labelColor: string;
+    compact?: boolean;
+  }) => {
+    const { routine, currentStep: step, timeRemaining: remaining, stepDuration: duration, timerColor, progress, label, labelColor, compact } = config;
+    const countdownSize = compact ? 'text-7xl' : 'text-9xl';
+    const ringSize = compact ? 'w-48 h-48' : 'w-64 h-64';
+    const ringR = compact ? 88 : 120;
+    const ringViewBox = compact ? '0 0 192 192' : '0 0 256 256';
+    const ringCenter = compact ? 96 : 128;
+    const headingSize = compact ? 'text-4xl' : 'text-5xl';
+    const iconSize = compact ? 60 : 80;
+
+    const currentActivity = step >= 0 && step < routine.length ? routine[step] : null;
+    const nextActivity = step >= 0 && step + 1 < routine.length ? routine[step + 1] : null;
+
+    return (
+      <div className="space-y-6">
+        {/* Label Header */}
+        <h2 className={`${compact ? 'text-3xl' : 'text-4xl'} font-black ${labelColor} text-center`}>{label}</h2>
+
+        {/* Progress Bar */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`${compact ? 'text-lg' : 'text-2xl'} font-bold`}>Progress</h3>
+            <Badge variant="secondary" className={`${compact ? 'text-sm px-3 py-1' : 'text-lg px-4 py-2'}`}>
+              {step >= 0 ? `Step ${step + 1} of ${routine.length}` : step === -3 ? 'Done!' : 'Starting Soon'}
+            </Badge>
+          </div>
+          <Progress value={progress} className="h-3 mb-4" />
+          <div className={`grid gap-2 ${compact ? 'grid-cols-4' : 'grid-cols-4 md:grid-cols-5'}`}>
+            {routine.map((s, index) => {
+              const timeInMinutes = getCurrentTimeInMinutes();
+              const stepStarted = timeInMinutes >= s.timeInMinutes;
+              const nextTime = index + 1 < routine.length ? routine[index + 1].timeInMinutes : s.timeInMinutes + LAST_STEP_WINDOW;
+              const stepCompleted = timeInMinutes >= nextTime;
+              const stepActive = stepStarted && !stepCompleted;
+              return (
+                <div
+                  key={index}
+                  className={`text-center p-2 rounded-lg transition-all ${
+                    stepCompleted
+                      ? 'bg-accent/20 border-2 border-accent'
+                      : stepActive
+                      ? 'bg-primary/20 border-2 border-primary animate-pulse'
+                      : 'bg-muted/50 border border-muted'
+                  }`}
+                >
+                  <s.icon
+                    size={compact ? 24 : 32}
+                    className={`mx-auto mb-1 ${
+                      stepCompleted ? 'text-accent'
+                        : stepActive ? 'text-primary'
+                        : 'text-muted-foreground'
+                    }`}
+                  />
+                  <div className={`text-xs font-semibold ${
+                    stepCompleted ? 'text-accent'
+                      : stepActive ? 'text-primary'
+                      : 'text-muted-foreground'
+                  }`}>
+                    {s.time}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Timer Display */}
+        {currentActivity && (
+          <Card className={`${compact ? 'p-6' : 'p-12'} text-center`}>
+            <div className="space-y-4">
+              {/* Countdown */}
+              <div
+                className={`${countdownSize} font-black animate-pulse transition-colors duration-1000`}
+                style={{ color: timerColor }}
+              >
+                {formatTimeRemaining(remaining)}
+              </div>
+
+              {/* Timer Ring */}
+              <div className={`relative ${ringSize} mx-auto my-4`}>
+                <svg className={`${ringSize} transform -rotate-90`} viewBox={ringViewBox}>
+                  <circle cx={ringCenter} cy={ringCenter} r={ringR} stroke="currentColor" strokeWidth="12" fill="none" className="text-muted/30" />
+                  <circle
+                    cx={ringCenter} cy={ringCenter} r={ringR}
+                    stroke={timerColor}
+                    strokeWidth="12" fill="none"
+                    strokeDasharray={`${2 * Math.PI * ringR}`}
+                    strokeDashoffset={`${2 * Math.PI * ringR * (1 - (duration > 0 ? remaining / duration : 0))}`}
+                    className="transition-all duration-1000 ease-linear"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <currentActivity.icon size={iconSize} className={`mx-auto ${currentActivity.iconColor}`} />
+                    <div className="mt-1 text-sm font-bold transition-colors duration-1000" style={{ color: timerColor }}>
+                      {Math.ceil(remaining / 60)}min
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activity Info */}
+              <div className="space-y-2">
+                <Badge variant="default" className={`${compact ? 'text-lg px-4 py-2' : 'text-2xl px-8 py-3'}`}>
+                  {currentActivity.time}
+                </Badge>
+                <h1 className={`${headingSize} font-black text-foreground`}>
+                  {currentActivity.activity}
+                </h1>
+                <p className={`${compact ? 'text-xl' : 'text-3xl'} font-semibold text-muted-foreground`}>
+                  {currentActivity.description}
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* "Done" state for individual routine */}
+        {step === -3 && (
+          <Card className={`${compact ? 'p-6' : 'p-12'} text-center`}>
+            <CheckCircle size={compact ? 60 : 80} className="text-accent mx-auto mb-4" />
+            <h2 className={`${headingSize} font-black text-accent`}>Done! ✅</h2>
+          </Card>
+        )}
+
+        {/* Next Activity Preview */}
+        {nextActivity && (
+          <Card className={`${compact ? 'p-4' : 'p-8'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <nextActivity.icon size={compact ? 32 : 48} className={nextActivity.iconColor} />
+                <div>
+                  <h3 className={`${compact ? 'text-lg' : 'text-2xl'} font-bold text-muted-foreground mb-1`}>Up Next:</h3>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className={`${compact ? 'text-sm px-2 py-1' : 'text-xl px-4 py-2'}`}>
+                      {nextActivity.time}
+                    </Badge>
+                    <span className={`${compact ? 'text-lg' : 'text-2xl'} font-semibold`}>{nextActivity.activity}</span>
+                  </div>
+                  <p className={`${compact ? 'text-base' : 'text-xl'} text-muted-foreground mt-1`}>{nextActivity.description}</p>
+                </div>
+              </div>
+              <ArrowRight size={compact ? 32 : 48} className="text-muted-foreground" />
+            </div>
+          </Card>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Main Rendering ───────────────────────────────────────────────────
+
+  const timeToUse = isDebugMode ? debugTime : currentTime;
+
+  // ── LATE NIGHT ──
+  if (appState === 'late-night') {
+    const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6;
+    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 30;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+        <TestModeButton />
+        <div className="w-full max-w-4xl space-y-8">
+          {isDebugMode && <DebugControls />}
+          <Card className="p-12 text-center">
+            <div className="space-y-8">
+              <h1 className="text-5xl font-black text-primary">See You Tomorrow! 🌙</h1>
+              <p className="text-2xl font-semibold text-muted-foreground">The morning routine will start again at 6:30 AM</p>
+              <div className="text-6xl font-black text-secondary">
+                {Math.floor(minutesUntilTomorrow / 60)}h {minutesUntilTomorrow % 60}m
+              </div>
+              <p className="text-xl text-muted-foreground">until tomorrow's routine</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // ── MORNING COMPLETE → Evening ──
+  if (appState === 'morning-complete') {
     if (eveningMode === 'active' && selectedSteps.length > 0) {
-      // Active evening countdown
       const evStep = selectedSteps[currentEveningStep];
       const nextEvStep = currentEveningStep + 1 < selectedSteps.length ? selectedSteps[currentEveningStep + 1] : null;
       const evRemaining = getEveningTimeRemaining();
@@ -819,26 +1100,6 @@ function App() {
           <div className="max-w-6xl mx-auto space-y-8">
             <TestModeButton />
             {isDebugMode && <DebugControls />}
-
-            {/* Fullscreen Activity Notification */}
-            {activityNotification && (
-              <div 
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500"
-                onClick={dismissNotification}
-                role="alert"
-                aria-live="assertive"
-              >
-                <Card className="p-16 max-w-4xl mx-8 border-4 border-primary bg-gradient-to-br from-primary/20 to-secondary/20">
-                  <div className="space-y-6 text-center">
-                    <div className="text-8xl">🔔</div>
-                    <h2 className="text-6xl font-black text-primary leading-tight whitespace-pre-line">
-                      {activityNotification}
-                    </h2>
-                    <p className="text-3xl text-muted-foreground mt-8">Tap anywhere to dismiss</p>
-                  </div>
-                </Card>
-              </div>
-            )}
 
             {/* Progress Bar */}
             <Card className="p-6">
@@ -989,7 +1250,6 @@ function App() {
     }
 
     if (eveningMode === 'complete') {
-      // Evening routine complete
       return (
         <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
           <TestModeButton />
@@ -1011,12 +1271,11 @@ function App() {
       );
     }
 
-    // Evening idle — show "Morning Complete" screen until 5 PM, then auto-start
+    // Evening idle — morning complete screen
     const timeInMinutes = getCurrentTimeInMinutes();
     const isEveningTime = timeInMinutes >= EVENING_START_MINUTES;
 
     if (isEveningTime) {
-      // Past 5 PM but still idle — brief loading state (auto-start effect will fire)
       return (
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
           <TestModeButton />
@@ -1030,7 +1289,6 @@ function App() {
       );
     }
 
-    // Before 5 PM — morning is done, waiting for evening
     const minutesUntilEvening = EVENING_START_MINUTES - timeInMinutes;
     const hoursUntil = Math.floor(minutesUntilEvening / 60);
     const minsUntil = minutesUntilEvening % 60;
@@ -1063,44 +1321,32 @@ function App() {
     );
   }
 
-  if (currentStep === -1) {
-    const timeToUse = isDebugMode ? debugTime : currentTime;
-    const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6;
-    const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 30;
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
-        <TestModeButton />
-        <div className="w-full max-w-4xl space-y-8">
-          {isDebugMode && <DebugControls />}
-          
-          <Card className="p-12 text-center">
-            <div className="space-y-8">
-              <h1 className="text-5xl font-black text-primary">See You Tomorrow! 🌙</h1>
-              <p className="text-2xl font-semibold text-muted-foreground">The morning routine will start again at 6:30 AM</p>
-              <div className="text-6xl font-black text-secondary">
-                {Math.floor(minutesUntilTomorrow / 60)}h {minutesUntilTomorrow % 60}m
-              </div>
-              <p className="text-xl text-muted-foreground">until tomorrow's routine</p>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentStep === -2) {
-    const timeUntilStart = getTimeUntilNextStep();
-    const timeToUse = isDebugMode ? debugTime : currentTime;
-    const isWeekend = !isSchoolDay(timeToUse);
+  // ── BEFORE START ──
+  if (appState === 'before-start') {
     const dayOfWeek = getDayOfWeek(timeToUse);
-    
-    if (isWeekend && DAILY_ROUTINE.length > 0 && timeUntilStart > 0) {
+    const isWeekend = !isSchoolDay(timeToUse);
+
+    // Determine earliest start time
+    let earliestStartMinutes: number;
+    if (morningPlan === 'dual' && loadedRoutines) {
+      earliestStartMinutes = Math.min(
+        loadedRoutines.weekdayMorningJack[0]?.timeInMinutes ?? Infinity,
+        loadedRoutines.weekdayMorningTwins[0]?.timeInMinutes ?? Infinity,
+      );
+    } else {
+      const routine = getDailyRoutine();
+      earliestStartMinutes = routine.length > 0 ? routine[0].timeInMinutes : 0;
+    }
+    const currentSec = getCurrentTimeInSeconds();
+    const timeUntilStart = Math.max(0, earliestStartMinutes * 60 - currentSec);
+    const totalWait = Math.max(1, earliestStartMinutes * 60 - currentSec);
+
+    if (isWeekend && getDailyRoutine().length > 0 && timeUntilStart > 0) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
           <TestModeButton />
           <div className="w-full max-w-4xl space-y-8">
             {isDebugMode && <DebugControls />}
-            
             <Card className="p-12 text-center">
               <div className="space-y-8">
                 <h1 className="text-6xl font-black text-primary">Happy {dayOfWeek}! 🎉</h1>
@@ -1111,43 +1357,36 @@ function App() {
         </div>
       );
     }
-    
+
+    // Compute timer color for before-start countdown
+    const beforeStartPct = totalWait > 0 ? timeUntilStart / totalWait : 0;
+    const beforeStartColor = beforeStartPct > 0.5
+      ? `rgb(${Math.round(255 * (1 - (beforeStartPct - 0.5) * 2))}, 255, 0)`
+      : `rgb(255, ${Math.round(255 * beforeStartPct * 2)}, 0)`;
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
         <TestModeButton />
         <div className="w-full max-w-4xl space-y-8">
           {isDebugMode && <DebugControls />}
-          
           <Card className="p-12 text-center">
             <div className="space-y-8">
               <h1 className="text-6xl font-black text-primary">Good Morning! 🌅</h1>
               <p className="text-3xl font-semibold text-muted-foreground">Get Ready to Start Your Routine!</p>
-              
+
               <div className="relative w-64 h-64 mx-auto">
                 <svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 256 256">
+                  <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="16" fill="none" className="text-muted/30" />
                   <circle
-                    cx="128"
-                    cy="128"
-                    r="120"
-                    stroke="currentColor"
-                    strokeWidth="16"
-                    fill="none"
-                    className="text-muted/30"
-                  />
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="120"
-                    stroke={getTimerColor()}
-                    strokeWidth="16"
-                    fill="none"
+                    cx="128" cy="128" r="120"
+                    stroke={beforeStartColor}
+                    strokeWidth="16" fill="none"
                     strokeDasharray={`${2 * Math.PI * 120}`}
-                    strokeDashoffset={`${2 * Math.PI * 120 * (timeUntilStart / getStepDuration())}`}
+                    strokeDashoffset={`${2 * Math.PI * 120 * (timeUntilStart / totalWait)}`}
                     className="transition-all duration-1000 ease-linear"
                     strokeLinecap="round"
                   />
                 </svg>
-                
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-6xl mb-2">⏰</div>
@@ -1157,7 +1396,7 @@ function App() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-8xl font-black text-secondary animate-pulse">
                 {formatTimeRemaining(timeUntilStart)}
               </div>
@@ -1169,148 +1408,36 @@ function App() {
     );
   }
 
-  if (currentStep >= DAILY_ROUTINE.length) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
-        <TestModeButton />
-        <div className="w-full max-w-4xl space-y-8">
-          {isDebugMode && <DebugControls />}
-          
-          <Card className="p-12 text-center">
-            <div className="space-y-8">
-              <CheckCircle size={120} className="text-accent mx-auto" />
-              <h1 className="text-6xl font-black text-accent">Great Job! 🎉</h1>
-              <p className="text-3xl font-semibold text-muted-foreground">Now it's Sam and Jill time!</p>
-              <p className="text-xl text-muted-foreground">Mommy and Daddy can relax together</p>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // ── MORNING ACTIVE ──
+  if (appState === 'morning-active') {
+    // ── SHARED VIEW (Saturday or fallback) ──
+    if (morningView === 'shared') {
+      const DAILY_ROUTINE = getDailyRoutine();
+      const sharedStep = getCurrentStep();
+      const sharedRemaining = getTimeUntilNextStep();
+      const sharedDuration = getStepDuration();
+      const sharedColor = getTimerColor();
+      const sharedProgress = getProgressPercentage();
 
-  if (currentStep < 0 || currentStep >= DAILY_ROUTINE.length) {
-    return null;
-  }
-
-  const currentActivity = DAILY_ROUTINE[currentStep];
-  const nextActivity = currentStep + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[currentStep + 1] : null;
-
-
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        <TestModeButton />
-
-        {/* Debug Controls */}
-        {isDebugMode && <DebugControls />}
-        
-        {/* Speech Unavailable Warning Banner */}
-        {!speechAvailable && (
-          <Card className="p-6 border-2 border-orange-500 bg-orange-50">
-            <div className="flex items-center gap-4">
-              <SpeakerX size={48} className="text-orange-600" />
-              <div>
-                <h3 className="text-2xl font-bold text-orange-900">Voice Announcements Not Available</h3>
-                <p className="text-lg text-orange-700 mt-1">
-                  Your TV browser doesn't support voice announcements. Watch for the large visual notifications when activities change!
-                </p>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Fullscreen Activity Notification - replaces speech on TV */}
-        {activityNotification && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500"
-            onClick={dismissNotification}
-            role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
-          >
-            <Card className="p-16 max-w-4xl mx-8 border-4 border-primary bg-gradient-to-br from-primary/20 to-secondary/20">
-              <div className="space-y-6 text-center">
-                <div className="text-8xl" aria-hidden="true">🔔</div>
-                <h2 
-                  id="notification-title"
-                  className="text-6xl font-black text-primary leading-tight whitespace-pre-line"
-                >
-                  {activityNotification}
-                </h2>
-                <p className="text-3xl text-muted-foreground mt-8">
-                  Tap anywhere to dismiss
-                </p>
-              </div>
-            </Card>
-          </div>
-        )}
-        
-        {/* Progress Bar */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold">Morning Routine Progress</h3>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              {currentStep >= 0 ? `Step ${currentStep + 1} of ${DAILY_ROUTINE.length}` : 'Starting Soon'}
-            </Badge>
-          </div>
-          <Progress value={progressPercentage} className="h-4 mb-6" />
-          
-          {/* Visual routine overview */}
-          <div className="grid grid-cols-5 gap-2 md:grid-cols-6 lg:grid-cols-11">
-            {DAILY_ROUTINE.map((step, index) => {
-              const timeInMinutes = getCurrentTimeInMinutes();
-              const stepStarted = timeInMinutes >= step.timeInMinutes;
-              const nextStepTime = index + 1 < DAILY_ROUTINE.length ? DAILY_ROUTINE[index + 1].timeInMinutes : step.timeInMinutes + 15;
-              const stepCompleted = timeInMinutes >= nextStepTime;
-              const stepActive = stepStarted && !stepCompleted;
-              
-              return (
-                <div 
-                  key={index} 
-                  className={`text-center p-3 rounded-lg transition-all ${
-                    stepCompleted
-                      ? 'bg-accent/20 border-2 border-accent' 
-                      : stepActive
-                      ? 'bg-primary/20 border-2 border-primary animate-pulse' 
-                      : 'bg-muted/50 border border-muted'
-                  }`}
-                >
-                  <step.icon 
-                    size={32} 
-                    className={`mx-auto mb-2 ${
-                      stepCompleted
-                        ? 'text-accent' 
-                        : stepActive
-                        ? 'text-primary' 
-                        : 'text-muted-foreground'
-                    }`} 
-                  />
-                  <div className={`text-sm font-semibold ${
-                    stepCompleted
-                      ? 'text-accent' 
-                      : stepActive
-                      ? 'text-primary' 
-                      : 'text-muted-foreground'
-                  }`}>
-                    {step.time}
-                  </div>
-                </div>
-              );
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <TestModeButton />
+            {isDebugMode && <DebugControls />}
+            {renderTimerPanel({
+              routine: DAILY_ROUTINE,
+              currentStep: sharedStep,
+              timeRemaining: sharedRemaining,
+              stepDuration: sharedDuration,
+              timerColor: sharedColor,
+              progress: sharedProgress,
+              label: 'Morning Routine',
+              labelColor: 'text-primary',
             })}
-          </div>
-        </Card>
-
-        {/* Main Timer Display */}
-        <Card className="p-12 text-center">
-          <div className="space-y-6">
-            
-            {/* Current Time */}
+            {/* Current time & voice toggle */}
             <div className="flex items-center justify-center gap-4 text-2xl text-muted-foreground">
               <Clock size={32} />
-              <span>{(isDebugMode ? debugTime : currentTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>{timeToUse.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               {isDebugMode && <Badge variant="destructive" className="ml-2">TEST MODE</Badge>}
               <Button
                 size="sm"
@@ -1325,100 +1452,85 @@ function App() {
                 </span>
               </Button>
             </div>
-
-            {/* Countdown Timer with color transition */}
-            <div 
-              className="text-9xl font-black animate-pulse transition-colors duration-1000"
-              style={{ color: getTimerColor() }}
-            >
-              {formatTimeRemaining(timeRemaining)}
-            </div>
-
-            {/* Visual Timer Ring for Non-Readers */}
-            <div className="relative w-64 h-64 mx-auto my-8">
-              {/* Background circle */}
-              <svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 256 256">
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="120"
-                  stroke="currentColor"
-                  strokeWidth="16"
-                  fill="none"
-                  className="text-muted/30"
-                />
-                {/* Progress circle with color transition */}
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="120"
-                  stroke={getTimerColor()}
-                  strokeWidth="16"
-                  fill="none"
-                  strokeDasharray={`${2 * Math.PI * 120}`}
-                  strokeDashoffset={`${2 * Math.PI * 120 * (1 - (timeRemaining / getStepDuration()))}`}
-                  className="transition-all duration-1000 ease-linear"
-                  strokeLinecap="round"
-                />
-              </svg>
-              
-              {/* Center content */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <currentActivity.icon size={80} className={`mx-auto ${currentActivity.iconColor}`} />
-                  <div 
-                    className="mt-2 text-lg font-bold transition-colors duration-1000"
-                    style={{ color: getTimerColor() }}
-                  >
-                    {Math.ceil(timeRemaining / 60)}min
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-
-            {/* Current Activity */}
-            <div className="space-y-4">
-              <Badge variant="default" className="text-2xl px-8 py-3">
-                {currentActivity.time}
-              </Badge>
-              <h1 className="text-5xl font-black text-foreground">
-                {currentActivity.activity}
-              </h1>
-              <p className="text-3xl font-semibold text-muted-foreground">
-                {currentActivity.description}
-              </p>
-            </div>
-
           </div>
-        </Card>
+        </div>
+      );
+    }
 
-        {/* Next Activity Preview */}
-        {nextActivity && (
-          <Card className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <nextActivity.icon size={48} className={nextActivity.iconColor} />
-                <div>
-                  <h3 className="text-2xl font-bold text-muted-foreground mb-2">Up Next:</h3>
-                  <div className="flex items-center gap-4">
-                    <Badge variant="outline" className="text-xl px-4 py-2">
-                      {nextActivity.time}
-                    </Badge>
-                    <span className="text-2xl font-semibold">{nextActivity.activity}</span>
-                  </div>
-                  <p className="text-xl text-muted-foreground mt-2">{nextActivity.description}</p>
-                </div>
-              </div>
-              <ArrowRight size={48} className="text-muted-foreground" />
+    // ── DUAL VIEW (jack-only, split, twins-only) ──
+    if (!loadedRoutines) return null;
+
+    const jackRoutine = loadedRoutines.weekdayMorningJack;
+    const twinsRoutine = loadedRoutines.weekdayMorningTwins;
+    const jackStep = getCurrentStepForRoutine(jackRoutine);
+    const twinsStep = getCurrentStepForRoutine(twinsRoutine);
+
+    const jackPanelConfig = {
+      routine: jackRoutine,
+      currentStep: jackStep,
+      timeRemaining: getTimeUntilNextStepForRoutine(jackRoutine),
+      stepDuration: getStepDurationForRoutine(jackRoutine),
+      timerColor: getTimerColorForRoutine(jackRoutine),
+      progress: getProgressForRoutine(jackRoutine),
+      label: 'Jack',
+      labelColor: 'text-blue-600',
+    };
+
+    const twinsPanelConfig = {
+      routine: twinsRoutine,
+      currentStep: twinsStep,
+      timeRemaining: getTimeUntilNextStepForRoutine(twinsRoutine),
+      stepDuration: getStepDurationForRoutine(twinsRoutine),
+      timerColor: getTimerColorForRoutine(twinsRoutine),
+      progress: getProgressForRoutine(twinsRoutine),
+      label: 'Ava & Dana',
+      labelColor: 'text-pink-600',
+    };
+
+    const isSplitView = morningView === 'split';
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+        <div className={`${isSplitView ? 'max-w-7xl' : 'max-w-6xl'} mx-auto space-y-8`}>
+          <TestModeButton />
+          {isDebugMode && <DebugControls />}
+
+          {/* Current time & voice toggle */}
+          <div className="flex items-center justify-center gap-4 text-2xl text-muted-foreground">
+            <Clock size={32} />
+            <span>{timeToUse.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {isDebugMode && <Badge variant="destructive" className="ml-2">TEST MODE</Badge>}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSpeechEnabled(!speechEnabled)}
+              className="gap-1 text-sm"
+              disabled={!speechAvailable}
+            >
+              {speechEnabled && speechAvailable ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
+              <span className="text-xs">
+                {!speechAvailable ? 'Voice Unavailable' : speechEnabled ? 'Voice On' : 'Voice Off'}
+              </span>
+            </Button>
+          </div>
+
+          {isSplitView ? (
+            <div className="grid grid-cols-2 gap-6">
+              {renderTimerPanel({ ...jackPanelConfig, compact: true })}
+              {renderTimerPanel({ ...twinsPanelConfig, compact: true })}
             </div>
-          </Card>
-        )}
-
+          ) : morningView === 'jack-only' ? (
+            renderTimerPanel(jackPanelConfig)
+          ) : (
+            renderTimerPanel(twinsPanelConfig)
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Fallback
+  return null;
 }
 
 export default App;
