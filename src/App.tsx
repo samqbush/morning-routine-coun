@@ -37,9 +37,7 @@ function App() {
   const [lastStepShared, setLastStepShared] = useState<number>(-3);
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
-  const [activityNotification, setActivityNotification] = useState<string | null>(null);
   const [speechAvailable, setSpeechAvailable] = useState(true);
-  const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Evening routine state
   const [eveningMode, setEveningMode] = useState<'idle' | 'active' | 'complete'>('idle');
@@ -308,15 +306,6 @@ function App() {
     checkSpeechAvailability();
   }, []);
 
-  // Cleanup notification timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
-      }
-    };
-  }, []);
-
   // ─── Audio & Speech ───────────────────────────────────────────────────
 
   const initializeAudio = () => {
@@ -357,7 +346,6 @@ function App() {
     if (!speechEnabled) return;
 
     if (!speechAvailable || !('speechSynthesis' in window)) {
-      showNotification(message);
       return;
     }
 
@@ -377,28 +365,11 @@ function App() {
       if (preferredVoice) utterance.voice = preferredVoice;
       utterance.onerror = () => {
         setSpeechAvailable(false);
-        showNotification(message);
       };
       window.speechSynthesis.speak(utterance);
     } catch {
       setSpeechAvailable(false);
-      showNotification(message);
     }
-  };
-
-  const dismissNotification = () => {
-    setActivityNotification(null);
-    if (notificationTimeoutRef.current) {
-      clearTimeout(notificationTimeoutRef.current);
-      notificationTimeoutRef.current = null;
-    }
-  };
-
-  const showNotification = (message: string) => {
-    if (!message) return;
-    if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
-    setActivityNotification(message);
-    notificationTimeoutRef.current = setTimeout(() => dismissNotification(), 8000);
   };
 
   // Build a speech message for a step change in a given routine
@@ -428,22 +399,7 @@ function App() {
     if (message) speakMessage(message);
   };
 
-  // Show visual notification for activity changes (legacy)
-  const showActivityNotification = (stepIndex: number) => {
-    const DAILY_ROUTINE = getDailyRoutine();
-    let message = '';
-    if (stepIndex === -2) {
-      message = 'Good morning! Get ready to start your routine!';
-    } else if (stepIndex === -1) {
-      message = 'Good night! See you tomorrow morning!';
-    } else if (stepIndex >= DAILY_ROUTINE.length) {
-      message = "Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!";
-    } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
-      const activity = DAILY_ROUTINE[stepIndex];
-      message = `Time for ${activity.activity}!\n${activity.description}`;
-    }
-    if (message) showNotification(message);
-  };
+
 
   // Announce evening activity using speech synthesis
   const announceEveningActivity = (step: EveningStep | null, isComplete?: boolean) => {
@@ -861,27 +817,6 @@ function App() {
     </div>
   ) : null;
 
-  // ─── Fullscreen Notification Overlay ──────────────────────────────────
-
-  const NotificationOverlay = () => activityNotification ? (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500"
-      onClick={dismissNotification}
-      role="alert"
-      aria-live="assertive"
-      aria-atomic="true"
-    >
-      <Card className="p-16 max-w-4xl mx-8 border-4 border-primary bg-gradient-to-br from-primary/20 to-secondary/20">
-        <div className="space-y-6 text-center">
-          <div className="text-8xl" aria-hidden="true">🔔</div>
-          <h2 className="text-6xl font-black text-primary leading-tight whitespace-pre-line">
-            {activityNotification}
-          </h2>
-          <p className="text-3xl text-muted-foreground mt-8">Tap anywhere to dismiss</p>
-        </div>
-      </Card>
-    </div>
-  ) : null;
 
   // ─── Reusable Timer Panel ─────────────────────────────────────────────
 
@@ -1089,7 +1024,6 @@ function App() {
           <div className="max-w-6xl mx-auto space-y-8">
             <TestModeButton />
             {isDebugMode && <DebugControls />}
-            <NotificationOverlay />
 
             {/* Progress Bar */}
             <Card className="p-6">
@@ -1414,20 +1348,6 @@ function App() {
           <div className="max-w-6xl mx-auto space-y-8">
             <TestModeButton />
             {isDebugMode && <DebugControls />}
-            {!speechAvailable && (
-              <Card className="p-6 border-2 border-orange-500 bg-orange-50">
-                <div className="flex items-center gap-4">
-                  <SpeakerX size={48} className="text-orange-600" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-orange-900">Voice Announcements Not Available</h3>
-                    <p className="text-lg text-orange-700 mt-1">
-                      Your TV browser doesn't support voice announcements. Watch for the large visual notifications when activities change!
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            )}
-            <NotificationOverlay />
             {renderTimerPanel({
               routine: DAILY_ROUTINE,
               currentStep: sharedStep,
@@ -1498,20 +1418,6 @@ function App() {
         <div className={`${isSplitView ? 'max-w-7xl' : 'max-w-6xl'} mx-auto space-y-8`}>
           <TestModeButton />
           {isDebugMode && <DebugControls />}
-          {!speechAvailable && (
-            <Card className="p-6 border-2 border-orange-500 bg-orange-50">
-              <div className="flex items-center gap-4">
-                <SpeakerX size={48} className="text-orange-600" />
-                <div>
-                  <h3 className="text-2xl font-bold text-orange-900">Voice Announcements Not Available</h3>
-                  <p className="text-lg text-orange-700 mt-1">
-                    Your TV browser doesn't support voice announcements. Watch for the large visual notifications when activities change!
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-          <NotificationOverlay />
 
           {/* Current time & voice toggle */}
           <div className="flex items-center justify-center gap-4 text-2xl text-muted-foreground">
