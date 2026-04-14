@@ -208,6 +208,8 @@ function validateEveningStep(step: any, index: number): void {
  */
 export function loadRoutines(): {
   weekdayMorning: RoutineStep[];
+  weekdayMorningJack: RoutineStep[];
+  weekdayMorningTwins: RoutineStep[];
   saturdayMorning: RoutineStep[];
   eveningSteps: EveningStep[];
   eveningRoutine: string[];
@@ -217,7 +219,7 @@ export function loadRoutines(): {
       throw new Error('Invalid routines config: must be a JSON object');
     }
 
-    const { weekdayMorning, saturdayMorning, eveningSteps, eveningRoutine } = routinesConfig as any;
+    const { weekdayMorning, weekdayMorningJack, weekdayMorningTwins, saturdayMorning, eveningSteps, eveningRoutine } = routinesConfig as any;
 
     if (!Array.isArray(weekdayMorning)) {
       throw new Error('Invalid routines config: "weekdayMorning" must be an array');
@@ -234,6 +236,21 @@ export function loadRoutines(): {
 
     if (!Array.isArray(eveningRoutine)) {
       throw new Error('Invalid routines config: "eveningRoutine" must be an array of step IDs');
+    }
+
+    // Validate new optional morning arrays (backward compatibility)
+    if (weekdayMorningJack !== undefined) {
+      if (!Array.isArray(weekdayMorningJack)) {
+        throw new Error('Invalid routines config: "weekdayMorningJack" must be an array');
+      }
+      weekdayMorningJack.forEach((step: any, i: number) => validateMorningStep(step, 'weekdayMorningJack', i));
+    }
+
+    if (weekdayMorningTwins !== undefined) {
+      if (!Array.isArray(weekdayMorningTwins)) {
+        throw new Error('Invalid routines config: "weekdayMorningTwins" must be an array');
+      }
+      weekdayMorningTwins.forEach((step: any, i: number) => validateMorningStep(step, 'weekdayMorningTwins', i));
     }
 
     // Validate morning steps
@@ -282,6 +299,12 @@ export function loadRoutines(): {
 
     return {
       weekdayMorning: weekdayMorning.map((step, i) => convertMorningStep(step, 'weekdayMorning', i)),
+      weekdayMorningJack: weekdayMorningJack
+        ? weekdayMorningJack.map((step: any, i: number) => convertMorningStep(step, 'weekdayMorningJack', i))
+        : [],
+      weekdayMorningTwins: weekdayMorningTwins
+        ? weekdayMorningTwins.map((step: any, i: number) => convertMorningStep(step, 'weekdayMorningTwins', i))
+        : [],
       saturdayMorning: saturdayMorning.map((step, i) => convertMorningStep(step, 'saturdayMorning', i)),
       eveningSteps: parsedEveningSteps,
       eveningRoutine: eveningRoutine as string[],

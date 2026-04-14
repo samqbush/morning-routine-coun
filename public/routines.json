@@ -57,6 +57,66 @@
       "iconColor": "text-green-500"
     }
   ],
+  "weekdayMorningJack": [
+    {
+      "time": "06:30",
+      "activity": "Wake Up",
+      "description": "Brush Teeth & Potty",
+      "icon": "Toilet",
+      "iconColor": "text-blue-500"
+    },
+    {
+      "time": "06:40",
+      "activity": "Breakfast Time",
+      "description": "Eat Breakfast",
+      "icon": "ForkKnife",
+      "iconColor": "text-orange-500"
+    },
+    {
+      "time": "07:00",
+      "activity": "Get Ready",
+      "description": "Pack Snacks, Water, Put on Shoes",
+      "icon": "Backpack",
+      "iconColor": "text-purple-500"
+    },
+    {
+      "time": "07:17",
+      "activity": "School Time",
+      "description": "Leave for School Bus",
+      "icon": "Bus",
+      "iconColor": "text-yellow-500"
+    }
+  ],
+  "weekdayMorningTwins": [
+    {
+      "time": "07:05",
+      "activity": "Wake Up",
+      "description": "Brush Teeth & Potty",
+      "icon": "Toilet",
+      "iconColor": "text-blue-500"
+    },
+    {
+      "time": "07:19",
+      "activity": "Socks & Shoes",
+      "description": "Put on Socks & Shoes",
+      "icon": "emoji:🧦",
+      "iconColor": "text-orange-500"
+    },
+    {
+      "time": "07:25",
+      "activity": "School Time",
+      "description": "Get in the Car - Leaving in 5 Minutes!",
+      "icon": "emoji:🚗",
+      "iconColor": "text-pink-500"
+    },
+    {
+      "time": "07:35",
+      "activity": "Morning Complete",
+      "description": "Time for a Break",
+      "icon": "CheckCircle",
+      "iconColor": "text-green-500"
+    }
+  ],
   "saturdayMorning": [
     {
       "time": "08:00",
