@@ -38,6 +38,8 @@ function App() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [speechAvailable, setSpeechAvailable] = useState(true);
+  const [audioManifest, setAudioManifest] = useState<Record<string, { text: string; file: string }> | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Evening routine state
   const [eveningMode, setEveningMode] = useState<'idle' | 'active' | 'complete'>('idle');
@@ -286,7 +288,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Check speech synthesis availability on mount
+  // Check speech synthesis availability and load audio manifest on mount
   useEffect(() => {
     const checkSpeechAvailability = () => {
       if (!('speechSynthesis' in window)) {
@@ -304,6 +306,13 @@ function App() {
       setSpeechAvailable(true);
     };
     checkSpeechAvailability();
+
+    // Load pre-generated audio manifest for fallback TTS
+    const basePath = import.meta.env.BASE_URL || '/';
+    fetch(`${basePath}audio/manifest.json`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setAudioManifest(data); })
+      .catch(() => {});
   }, []);
 
   // ─── Audio & Speech ───────────────────────────────────────────────────
@@ -342,37 +351,70 @@ function App() {
     }
   };
 
-  const speakMessage = (message: string) => {
-    if (!speechEnabled) return;
+  // Play pre-generated audio files sequentially by manifest keys
+  const playAudioByKeys = (keys: string[]) => {
+    if (!audioManifest || keys.length === 0) return;
 
-    if (!speechAvailable || !('speechSynthesis' in window)) {
-      return;
+    // Stop any currently playing audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
     }
 
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.1;
-      utterance.volume = 0.8;
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice =>
-        voice.name.includes('Samantha') ||
-        voice.name.includes('Karen') ||
-        voice.name.includes('Daniel') ||
-        voice.lang.startsWith('en-')
-      );
-      if (preferredVoice) utterance.voice = preferredVoice;
-      utterance.onerror = () => {
+    const basePath = import.meta.env.BASE_URL || '/';
+    let index = 0;
+
+    const playNext = () => {
+      if (index >= keys.length) return;
+      const entry = audioManifest[keys[index]];
+      if (!entry) { index++; playNext(); return; }
+
+      const audio = new Audio(`${basePath}audio/${entry.file}`);
+      currentAudioRef.current = audio;
+      audio.onended = () => { index++; playNext(); };
+      audio.onerror = () => { index++; playNext(); };
+      audio.play().catch(() => { index++; playNext(); });
+    };
+
+    playNext();
+  };
+
+  const speakMessage = (message: string, audioKeys?: string[]) => {
+    if (!speechEnabled) return;
+
+    // Try browser speech synthesis first (works on desktop/mobile)
+    if (speechAvailable && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 0.8;
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice =>
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Karen') ||
+          voice.name.includes('Daniel') ||
+          voice.lang.startsWith('en-')
+        );
+        if (preferredVoice) utterance.voice = preferredVoice;
+        utterance.onerror = () => {
+          setSpeechAvailable(false);
+        };
+        window.speechSynthesis.speak(utterance);
+        return;
+      } catch {
         setSpeechAvailable(false);
-      };
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      setSpeechAvailable(false);
+      }
+    }
+
+    // Fallback: play pre-generated audio (works on Samsung TV)
+    if (audioKeys && audioKeys.length > 0) {
+      playAudioByKeys(audioKeys);
     }
   };
 
-  // Build a speech message for a step change in a given routine
+  // Build a speech message and audio key for a step change in a given routine
   const buildStepMessage = (stepIndex: number, routine: RoutineStep[], label: string): string => {
     if (stepIndex === -2) return `${label}: Get ready to start your routine!`;
     if (stepIndex === -3) return '';
@@ -382,21 +424,39 @@ function App() {
     return '';
   };
 
+  const buildStepAudioKey = (stepIndex: number, keyPrefix: string): string => {
+    if (stepIndex === -2) return `${keyPrefix}.get-ready`;
+    if (stepIndex >= 0) return `${keyPrefix}.step.${stepIndex}`;
+    return '';
+  };
+
+  // Get the audio key prefix for shared/legacy mode based on current day
+  const getSharedAudioPrefix = (): string => {
+    const dayOfWeek = getDayOfWeek(isDebugMode ? debugTime : currentTime);
+    return dayOfWeek === 'Saturday' ? 'morning.saturday' : 'morning.shared';
+  };
+
   // Announce for shared/legacy single-routine mode
   const announceActivity = (stepIndex: number) => {
     if (!speechEnabled) return;
     const DAILY_ROUTINE = getDailyRoutine();
+    const prefix = getSharedAudioPrefix();
     let message = '';
+    let audioKey = '';
     if (stepIndex === -2) {
       message = 'Good morning! Get ready to start your routine!';
+      audioKey = 'morning.shared.get-ready';
     } else if (stepIndex === -1) {
       message = 'Good night! See you tomorrow morning!';
+      audioKey = 'morning.shared.good-night';
     } else if (stepIndex >= DAILY_ROUTINE.length) {
       message = "Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!";
+      audioKey = 'morning.shared.complete';
     } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
       message = `Time for ${DAILY_ROUTINE[stepIndex].activity}! ${DAILY_ROUTINE[stepIndex].description}`;
+      audioKey = `${prefix}.step.${stepIndex}`;
     }
-    if (message) speakMessage(message);
+    if (message) speakMessage(message, audioKey ? [audioKey] : undefined);
   };
 
 
@@ -405,12 +465,17 @@ function App() {
   const announceEveningActivity = (step: EveningStep | null, isComplete?: boolean) => {
     if (!speechEnabled) return;
     let message = '';
+    let audioKey = '';
     if (isComplete) {
       message = "Great job! The evening routine is complete. Now it's Sam and Jill time!";
-    } else if (step) {
+      audioKey = 'evening.complete';
+    } else if (step && loadedRoutines) {
       message = `Time for ${step.activity}! ${step.description}. You have ${step.durationMinutes} minutes.`;
+      // Find step's original index in the eveningRoutine config array
+      const originalIndex = loadedRoutines.eveningRoutine.indexOf(step.id);
+      if (originalIndex >= 0) audioKey = `evening.step.${originalIndex}`;
     }
-    if (message) speakMessage(message);
+    if (message) speakMessage(message, audioKey ? [audioKey] : undefined);
   };
 
   // ─── Evening Routine Functions ────────────────────────────────────────
@@ -541,28 +606,39 @@ function App() {
     if (!jackChanged && !twinsChanged) return;
 
     const messages: string[] = [];
+    const audioKeys: string[] = [];
 
     if (jackChanged) {
       const msg = buildStepMessage(jackStep, loadedRoutines.weekdayMorningJack, 'Jack');
-      if (msg) messages.push(msg);
+      if (msg) {
+        messages.push(msg);
+        const key = buildStepAudioKey(jackStep, 'morning.jack');
+        if (key) audioKeys.push(key);
+      }
       setLastStepJack(jackStep);
     }
 
     if (twinsChanged) {
       const msg = buildStepMessage(twinsStep, loadedRoutines.weekdayMorningTwins, 'Ava and Dana');
-      if (msg) messages.push(msg);
+      if (msg) {
+        messages.push(msg);
+        const key = buildStepAudioKey(twinsStep, 'morning.twins');
+        if (key) audioKeys.push(key);
+      }
       setLastStepTwins(twinsStep);
     }
 
     // Only announce "all done" when BOTH routines are complete
     if (jackStep === -3 && twinsStep === -3 && (jackChanged || twinsChanged)) {
       messages.length = 0;
+      audioKeys.length = 0;
       messages.push("Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!");
+      audioKeys.push('morning.shared.complete');
     }
 
     if (messages.length > 0) {
       playStepChangeSound();
-      speakMessage(messages.join(' '));
+      speakMessage(messages.join(' '), audioKeys);
     }
   }, [currentTime, debugTime, morningPlan]);
 
