@@ -40,6 +40,8 @@ function App() {
   const [speechAvailable, setSpeechAvailable] = useState(true);
   const [audioManifest, setAudioManifest] = useState<Record<string, { text: string; file: string }> | null>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [showAudioPrompt, setShowAudioPrompt] = useState(false);
 
   // Evening routine state
   const [eveningMode, setEveningMode] = useState<'idle' | 'active' | 'complete'>('idle');
@@ -315,19 +317,77 @@ function App() {
       .catch(() => {});
   }, []);
 
+  // Attempt to unlock audio on mount and show prompt if blocked
+  useEffect(() => {
+    // Small delay to let AudioContext initialize
+    const timer = setTimeout(() => tryUnlockAudio(), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   // ─── Audio & Speech ───────────────────────────────────────────────────
 
   const initializeAudio = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    // Resume suspended AudioContext (required after user gesture for autoplay policy)
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume().catch(() => {});
+    }
+  };
+
+  // Attempt to unlock audio; if blocked, show the prompt overlay
+  const tryUnlockAudio = () => {
+    if (audioUnlocked) return;
+    const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (!audioContextRef.current) audioContextRef.current = ctx;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        setAudioUnlocked(true);
+        setShowAudioPrompt(false);
+      }).catch(() => {
+        setShowAudioPrompt(true);
+      });
+      // Also show prompt if still suspended after a short delay
+      setTimeout(() => {
+        if (ctx.state === 'suspended') {
+          setShowAudioPrompt(true);
+        }
+      }, 200);
+    } else {
+      setAudioUnlocked(true);
+      setShowAudioPrompt(false);
+    }
+  };
+
+  // Handle user gesture to unlock audio (for autoplay policy)
+  const handleAudioUnlock = () => {
+    initializeAudio();
+    if (audioContextRef.current) {
+      audioContextRef.current.resume().then(() => {
+        setAudioUnlocked(true);
+        setShowAudioPrompt(false);
+        // Play a short confirmation chime
+        playStepChangeSound();
+      }).catch(() => {});
+    }
+    // Also try playing and immediately pausing a silent audio element to unlock HTMLAudioElement
+    try {
+      const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      silentAudio.play().then(() => { silentAudio.pause(); }).catch(() => {});
+    } catch {}
   };
 
   const playStepChangeSound = () => {
     initializeAudio();
     if (!audioContextRef.current) return;
+    const ctx = audioContextRef.current;
+    if (ctx.state === 'suspended') {
+      console.warn('AudioContext suspended — chime skipped (autoplay policy)');
+      return;
+    }
     try {
-      const ctx = audioContextRef.current;
       const oscillator1 = ctx.createOscillator();
       const oscillator2 = ctx.createOscillator();
       const gainNode = ctx.createGain();
@@ -372,8 +432,14 @@ function App() {
       const audio = new Audio(`${basePath}audio/${entry.file}`);
       currentAudioRef.current = audio;
       audio.onended = () => { index++; playNext(); };
-      audio.onerror = () => { index++; playNext(); };
-      audio.play().catch(() => { index++; playNext(); });
+      audio.onerror = (e) => {
+        console.warn(`Audio file failed to load: ${entry.file}`, e);
+        index++; playNext();
+      };
+      audio.play().catch((err) => {
+        console.warn(`Audio play() rejected for ${entry.file}:`, err.message);
+        index++; playNext();
+      });
     };
 
     playNext();
@@ -1061,12 +1127,32 @@ function App() {
 
   const timeToUse = isDebugMode ? debugTime : currentTime;
 
+  // Audio unlock overlay — rendered in every view, positioned fixed
+  const audioUnlockOverlay = showAudioPrompt ? (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={handleAudioUnlock}
+      onKeyDown={handleAudioUnlock}
+    >
+      <button
+        autoFocus
+        onClick={handleAudioUnlock}
+        className="flex flex-col items-center gap-6 rounded-3xl bg-white/95 px-16 py-12 shadow-2xl focus:outline-none focus:ring-4 focus:ring-primary"
+      >
+        <SpeakerHigh size={80} className="text-primary" />
+        <span className="text-4xl font-bold text-foreground">Press OK to Enable Sound</span>
+        <span className="text-2xl text-muted-foreground">Sound requires a button press to start</span>
+      </button>
+    </div>
+  ) : null;
+
   // ── LATE NIGHT ──
   if (appState === 'late-night') {
     const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6;
     const minutesUntilTomorrow = (hoursUntilTomorrow * 60) - timeToUse.getMinutes() + 30;
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+        {audioUnlockOverlay}
         <TestModeButton />
         <div className="w-full max-w-4xl space-y-8">
           {isDebugMode && <DebugControls />}
@@ -1097,6 +1183,7 @@ function App() {
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+          {audioUnlockOverlay}
           <div className="max-w-6xl mx-auto space-y-8">
             <TestModeButton />
             {isDebugMode && <DebugControls />}
@@ -1252,6 +1339,7 @@ function App() {
     if (eveningMode === 'complete') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
+          {audioUnlockOverlay}
           <TestModeButton />
           <div className="w-full max-w-4xl space-y-8">
             {isDebugMode && <DebugControls />}
@@ -1278,6 +1366,7 @@ function App() {
     if (isEveningTime) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
+          {audioUnlockOverlay}
           <TestModeButton />
           <div className="w-full max-w-4xl space-y-8">
             {isDebugMode && <DebugControls />}
@@ -1294,6 +1383,7 @@ function App() {
     const minsUntil = minutesUntilEvening % 60;
     return (
       <div className="min-h-screen bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center p-8">
+        {audioUnlockOverlay}
         <TestModeButton />
         <div className="w-full max-w-4xl space-y-8">
           {isDebugMode && <DebugControls />}
@@ -1344,6 +1434,7 @@ function App() {
     if (isWeekend && getDailyRoutine().length > 0 && timeUntilStart > 0) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
+          {audioUnlockOverlay}
           <TestModeButton />
           <div className="w-full max-w-4xl space-y-8">
             {isDebugMode && <DebugControls />}
@@ -1366,6 +1457,7 @@ function App() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
+        {audioUnlockOverlay}
         <TestModeButton />
         <div className="w-full max-w-4xl space-y-8">
           {isDebugMode && <DebugControls />}
@@ -1421,6 +1513,7 @@ function App() {
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+          {audioUnlockOverlay}
           <div className="max-w-6xl mx-auto space-y-8">
             <TestModeButton />
             {isDebugMode && <DebugControls />}
@@ -1491,6 +1584,7 @@ function App() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+        {audioUnlockOverlay}
         <div className={`${isSplitView ? 'max-w-7xl' : 'max-w-6xl'} mx-auto space-y-8`}>
           <TestModeButton />
           {isDebugMode && <DebugControls />}
