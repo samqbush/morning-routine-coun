@@ -34,13 +34,29 @@ function keyToFilename(key) {
 const force = process.argv.includes('--force');
 let failures = 0;
 
+// Load existing manifest to detect text changes (stale audio)
+const MANIFEST_PATH = join(AUDIO_DIR, 'manifest.json');
+let previousManifest = {};
+try {
+  if (existsSync(MANIFEST_PATH)) {
+    previousManifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf-8'));
+  }
+} catch {}
+
 function generateMp3(text, filename) {
   const aiffPath = join(AUDIO_DIR, filename.replace('.mp3', '.aiff'));
   const mp3Path = join(AUDIO_DIR, filename);
 
   if (existsSync(mp3Path) && !force) {
-    console.log(`  ✓ exists: ${filename}`);
-    return;
+    // Regenerate if the announcement text has changed
+    const prevEntry = Object.values(previousManifest).find(e => e.file === filename);
+    if (prevEntry && prevEntry.text === text) {
+      console.log(`  ✓ exists: ${filename}`);
+      return;
+    }
+    if (prevEntry) {
+      console.log(`  ↻ text changed, regenerating: ${filename}`);
+    }
   }
 
   try {
@@ -120,7 +136,11 @@ for (const step of routines.eveningSteps) {
 
 routines.eveningRoutine.forEach((stepId, i) => {
   const step = eveningStepMap[stepId];
-  if (!step) return;
+  if (!step) {
+    console.error(`  ✗ ERROR: eveningRoutine references unknown step ID "${stepId}" at index ${i}`);
+    failures++;
+    return;
+  }
   const msg = `Time for ${step.activity}! ${step.description}. You have ${step.durationMinutes} minutes.`;
   add(`evening.step.${i}`, msg);
 });
