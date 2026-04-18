@@ -516,7 +516,7 @@ function App() {
       message = 'Good night! See you tomorrow morning!';
       audioKey = 'morning.shared.good-night';
     } else if (stepIndex >= DAILY_ROUTINE.length) {
-      message = "Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!";
+      message = "Great job everyone! Morning routine complete. Have a wonderful work day!";
       audioKey = 'morning.shared.complete';
     } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
       message = `Time for ${DAILY_ROUTINE[stepIndex].activity}! ${DAILY_ROUTINE[stepIndex].description}`;
@@ -698,7 +698,7 @@ function App() {
     if (jackStep === -3 && twinsStep === -3 && (jackChanged || twinsChanged)) {
       messages.length = 0;
       audioKeys.length = 0;
-      messages.push("Great job! Now it's Sam and Jill time. Mommy and Daddy can relax together!");
+      messages.push("Great job everyone! Morning routine complete. Have a wonderful work day!");
       audioKeys.push('morning.shared.complete');
     }
 
@@ -720,6 +720,13 @@ function App() {
       setLastStepShared(step);
     }
   }, [currentTime, debugTime, morningPlan]);
+
+  // Reset evening routine to idle at the start of a new morning so it can auto-start that evening
+  useEffect(() => {
+    if ((appState === 'before-start' || appState === 'morning-active') && eveningMode === 'complete') {
+      setEveningMode('idle');
+    }
+  }, [appState, eveningMode]);
 
   // Auto-start evening routine when morning is truly complete (only after 5 PM)
   useEffect(() => {
