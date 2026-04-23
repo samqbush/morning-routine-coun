@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, ArrowRight, Bug, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause, SkipForward, ArrowsClockwise, Sun } from '@phosphor-icons/react';
+import { Clock, ArrowRight, CalendarBlank, SpeakerHigh, SpeakerX, CheckCircle, Play, Pause, SkipForward, ArrowsClockwise, Sun, ArrowLeft, Eye } from '@phosphor-icons/react';
 import { loadRoutines, RoutineStep, EveningStep } from '@/lib/routineLoader';
 
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
@@ -32,6 +32,7 @@ function App() {
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [debugTime, setDebugTime] = useState(new Date());
   const [debugDay, setDebugDay] = useState<DayOfWeek | null>(null);
+  const [showScheduleReview, setShowScheduleReview] = useState(false);
   const [lastStepJack, setLastStepJack] = useState<number>(-3);
   const [lastStepTwins, setLastStepTwins] = useState<number>(-3);
   const [lastStepShared, setLastStepShared] = useState<number>(-3);
@@ -736,50 +737,12 @@ function App() {
     }
   }, [appState, eveningMode, selectedSteps.length, currentTime]);
 
-  // ─── Debug Helpers ────────────────────────────────────────────────────
+  // ─── Schedule Review Helpers ────────────────────────────────────────
 
   const setDebugTimeFromMinutes = (mins: number) => {
     const newTime = new Date();
     newTime.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
     setDebugTime(newTime);
-  };
-
-  const setDebugTimeToStep = (stepIndex: number) => {
-    initializeAudio();
-    const DAILY_ROUTINE = getDailyRoutine();
-    if (stepIndex === -1) {
-      setDebugTimeFromMinutes(22 * 60);
-    } else if (stepIndex === -2) {
-      setDebugTimeFromMinutes(6 * 60 + 15);
-    } else if (stepIndex === -3) {
-      if (morningPlan === 'dual' && loadedRoutines) {
-        const allSteps = [...loadedRoutines.weekdayMorningJack, ...loadedRoutines.weekdayMorningTwins];
-        const lastTime = Math.max(...allSteps.map(s => s.timeInMinutes));
-        setDebugTimeFromMinutes(lastTime + LAST_STEP_WINDOW + 1);
-      } else if (DAILY_ROUTINE.length > 0) {
-        const last = DAILY_ROUTINE[DAILY_ROUTINE.length - 1];
-        setDebugTimeFromMinutes(last.timeInMinutes + 5);
-      }
-    } else if (stepIndex >= DAILY_ROUTINE.length) {
-      setDebugTimeFromMinutes(21 * 60);
-    } else if (stepIndex >= 0 && stepIndex < DAILY_ROUTINE.length) {
-      setDebugTimeFromMinutes(DAILY_ROUTINE[stepIndex].timeInMinutes);
-      setTimeout(() => {
-        playStepChangeSound();
-        announceActivity(stepIndex);
-      }, 100);
-    }
-  };
-
-  const setDebugTimeToRoutineStep = (routine: RoutineStep[], stepIndex: number, label: string) => {
-    initializeAudio();
-    if (stepIndex >= 0 && stepIndex < routine.length) {
-      setDebugTimeFromMinutes(routine[stepIndex].timeInMinutes);
-      setTimeout(() => {
-        playStepChangeSound();
-        speakMessage(`${label}: Time for ${routine[stepIndex].activity}!`);
-      }, 100);
-    }
   };
 
   const formatTimeRemaining = (seconds: number) => {
@@ -789,175 +752,249 @@ function App() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // ─── Debug Controls ───────────────────────────────────────────────────
+  /** Get the morning steps that would display for a given day */
+  const getMorningStepsForDay = (day: DayOfWeek): { label: string; steps: RoutineStep[] }[] => {
+    if (!loadedRoutines) return [];
+    const weekdays: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    if (weekdays.includes(day)) {
+      if (loadedRoutines.weekdayMorningJack.length > 0 && loadedRoutines.weekdayMorningTwins.length > 0) {
+        return [
+          { label: "Jack's Morning", steps: loadedRoutines.weekdayMorningJack },
+          { label: "Ava & Dana's Morning", steps: loadedRoutines.weekdayMorningTwins },
+        ];
+      }
+      return [{ label: 'Morning Routine', steps: loadedRoutines.weekdayMorning }];
+    }
+    if (day === 'Saturday') {
+      return [{ label: 'Saturday Morning', steps: loadedRoutines.saturdayMorning }];
+    }
+    return [];
+  };
 
-  const DebugControls = () => {
-    const DAILY_ROUTINE = getDailyRoutine();
+  /** Get evening steps with computed start times for display */
+  const getEveningStepsWithTimes = (): { step: EveningStep; startTime: string }[] => {
+    if (!loadedRoutines) return [];
+    const orderedSteps = loadedRoutines.eveningRoutine
+      .map(id => loadedRoutines!.eveningSteps.find(s => s.id === id))
+      .filter((s): s is EveningStep => !!s);
+
+    let runningMinutes = EVENING_START_MINUTES;
+    return orderedSteps.map(step => {
+      const hours = Math.floor(runningMinutes / 60);
+      const mins = runningMinutes % 60;
+      const startTime = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+      runningMinutes += step.durationMinutes;
+      return { step, startTime };
+    });
+  };
+
+  /** Preview a morning step from the schedule review */
+  const previewMorningStep = (step: RoutineStep, day: DayOfWeek) => {
+    initializeAudio();
+    setDebugDay(day);
+    setDebugTimeFromMinutes(step.timeInMinutes);
+    setIsDebugMode(true);
+    setShowScheduleReview(false);
+  };
+
+  /** Preview an evening time from the schedule review */
+  const previewEveningTime = (startTimeMinutes: number, day: DayOfWeek) => {
+    initializeAudio();
+    setDebugDay(day);
+    setDebugTimeFromMinutes(startTimeMinutes);
+    setIsDebugMode(true);
+    setShowScheduleReview(false);
+  };
+
+  // ─── Schedule Review ──────────────────────────────────────────────────
+
+  const ScheduleReview = () => {
     const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const selectedDay = debugDay || getDayOfWeek(currentTime);
+    const morningGroups = getMorningStepsForDay(selectedDay);
+    const eveningStepsWithTimes = getEveningStepsWithTimes();
+    const hasMorning = morningGroups.length > 0 && morningGroups.some(g => g.steps.length > 0);
 
     return (
-    <Card className="p-6 border-2 border-destructive">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Bug size={24} className="text-destructive" />
-          <h3 className="text-xl font-bold text-destructive">Debug Mode - Test Different Times & Days</h3>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          Current debug time: {(isDebugMode ? debugTime : currentTime).toLocaleTimeString()}
-          {debugDay && <span className="ml-2 font-semibold">({debugDay})</span>}
-          <span className="ml-2">Plan: <Badge variant="outline">{morningPlan}</Badge></span>
-          <span className="ml-2">View: <Badge variant="outline">{morningView}</Badge></span>
-          <span className="ml-2">State: <Badge variant="outline">{appState}</Badge></span>
-        </div>
-
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Select Day of Week:</h4>
-          <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
-            {days.map((day) => (
-              <Button
-                key={day}
-                size="sm"
-                variant={debugDay === day ? "default" : "outline"}
-                onClick={() => setDebugDay(day)}
-              >
-                {day.slice(0, 3)}
-              </Button>
-            ))}
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CalendarBlank size={32} className="text-primary" />
+              <h1 className="text-3xl font-black text-primary">Schedule Review</h1>
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setShowScheduleReview(false);
+                setDebugDay(null);
+              }}
+              className="gap-2"
+            >
+              Close
+            </Button>
           </div>
-        </div>
 
-        {morningPlan === 'dual' && loadedRoutines ? (
-          <>
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-blue-600">Jack's Steps:</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {loadedRoutines.weekdayMorningJack.map((step, index) => (
-                  <Button key={`jack-${index}`} size="sm" variant="outline" onClick={() => setDebugTimeToRoutineStep(loadedRoutines!.weekdayMorningJack, index, 'Jack')}>
-                    {step.time} - {step.activity}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-pink-600">Twins' Steps:</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {loadedRoutines.weekdayMorningTwins.map((step, index) => (
-                  <Button key={`twins-${index}`} size="sm" variant="outline" onClick={() => setDebugTimeToRoutineStep(loadedRoutines!.weekdayMorningTwins, index, 'Ava & Dana')}>
-                    {step.time} - {step.activity}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Jump to Activity:</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
-                Before Start (6:15 AM)
-              </Button>
-              {DAILY_ROUTINE.map((step, index) => (
-                <Button key={index} size="sm" variant="outline" onClick={() => setDebugTimeToStep(index)}>
-                  {step.time} - {step.activity}
+          {/* Day picker */}
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Select Day</h3>
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+              {days.map((day) => (
+                <Button
+                  key={day}
+                  size="sm"
+                  variant={selectedDay === day ? "default" : "outline"}
+                  onClick={() => setDebugDay(day)}
+                >
+                  {day.slice(0, 3)}
                 </Button>
               ))}
-              <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(DAILY_ROUTINE.length)}>
-                Finished (9:00 PM)
+            </div>
+          </Card>
+
+          {/* Morning section */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+              ☀️ Morning
+              {!hasMorning && <Badge variant="outline" className="ml-2 text-muted-foreground">No routine</Badge>}
+            </h2>
+            {hasMorning ? (
+              <div className="space-y-6">
+                {morningGroups.map((group, gi) => (
+                  <div key={gi}>
+                    {morningGroups.length > 1 && (
+                      <h3 className={`text-lg font-semibold mb-3 ${gi === 0 ? 'text-blue-600' : 'text-pink-600'}`}>
+                        {group.label}
+                      </h3>
+                    )}
+                    <div className="space-y-2">
+                      {group.steps.map((step, si) => (
+                        <div
+                          key={`${gi}-${si}`}
+                          className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/10 cursor-pointer transition-colors group"
+                          onClick={() => previewMorningStep(step, selectedDay)}
+                        >
+                          <Badge variant="outline" className="text-base px-3 py-1 font-mono min-w-[70px] text-center">
+                            {step.time}
+                          </Badge>
+                          <step.icon size={28} className={step.iconColor} />
+                          <div className="flex-1">
+                            <div className="font-semibold text-lg">{step.activity}</div>
+                            <div className="text-sm text-muted-foreground">{step.description}</div>
+                          </div>
+                          <Eye size={20} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">
+                {selectedDay === 'Sunday' ? 'No routine scheduled for Sunday — enjoy your day!' : 'No morning routine for this day.'}
+              </p>
+            )}
+          </Card>
+
+          {/* Evening section */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-primary mb-1 flex items-center gap-2">
+              🌙 Evening
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Starts at 5:00 PM · Times are estimated based on step durations
+            </p>
+            <div className="space-y-2">
+              {eveningStepsWithTimes.map(({ step, startTime }, index) => {
+                const startMinutes = EVENING_START_MINUTES + eveningStepsWithTimes.slice(0, index).reduce((sum, s) => sum + s.step.durationMinutes, 0);
+                return (
+                  <div
+                    key={step.id}
+                    className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/10 cursor-pointer transition-colors group"
+                    onClick={() => previewEveningTime(startMinutes, selectedDay)}
+                  >
+                    <Badge variant="outline" className="text-base px-3 py-1 font-mono min-w-[70px] text-center">
+                      {startTime}
+                    </Badge>
+                    <step.icon size={28} className={step.iconColor} />
+                    <div className="flex-1">
+                      <div className="font-semibold text-lg">{step.activity}</div>
+                      <div className="text-sm text-muted-foreground">{step.description}</div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">{step.durationMinutes}min</Badge>
+                    <Eye size={20} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Sound test */}
+          <Card className="p-4">
+            <div className="flex gap-2 flex-wrap items-center">
+              <span className="text-sm font-semibold text-muted-foreground mr-2">Audio:</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => playStepChangeSound()}
+                className="gap-2"
+              >
+                <SpeakerHigh size={16} />
+                Test Sound
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
-                Late Night (10:00 PM)
+              <Button
+                size="sm"
+                variant={speechEnabled ? "default" : "secondary"}
+                onClick={() => setSpeechEnabled(!speechEnabled)}
+                className="gap-2"
+              >
+                {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
+                {speechEnabled ? 'Voice On' : 'Voice Off'}
               </Button>
             </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Special States:</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-2)}>
-              Before Start (6:15 AM)
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-3)}>
-              Break Time (After Morning)
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setDebugTimeToStep(-1)}>
-              Late Night (10:00 PM)
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setIsDebugMode(false);
-              setDebugTime(new Date());
-              setDebugDay(null);
-            }}
-          >
-            Exit Debug Mode
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => playStepChangeSound()}
-            className="gap-2"
-          >
-            <SpeakerHigh size={16} />
-            Test Sound
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              if (morningPlan === 'dual' && loadedRoutines) {
-                const jackStep = getCurrentStepForRoutine(loadedRoutines.weekdayMorningJack);
-                const msg = buildStepMessage(jackStep, loadedRoutines.weekdayMorningJack, 'Jack');
-                if (msg) speakMessage(msg);
-              } else {
-                announceActivity(getCurrentStep());
-              }
-            }}
-            className="gap-2"
-          >
-            {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
-            Test Voice
-          </Button>
-          <Button
-            size="sm"
-            variant={speechEnabled ? "default" : "secondary"}
-            onClick={() => setSpeechEnabled(!speechEnabled)}
-            className="gap-2"
-          >
-            {speechEnabled ? <SpeakerHigh size={16} /> : <SpeakerX size={16} />}
-            {speechEnabled ? 'Voice On' : 'Voice Off'}
-          </Button>
+          </Card>
         </div>
       </div>
-    </Card>
-  );};
+    );
+  };
 
-  // ─── Render Test Mode Button ──────────────────────────────────────────
+  // ─── Schedule Button & Back Button ────────────────────────────────────
 
-  const TestModeButton = () => !isDebugMode ? (
+  const ScheduleButton = () => (
     <div className="fixed top-4 right-4 z-50">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => {
-          initializeAudio();
-          setIsDebugMode(true);
-          if (!debugDay) setDebugDay(getDayOfWeek(currentTime));
-        }}
-        className="gap-2"
-      >
-        <Bug size={16} />
-        Test Mode
-      </Button>
+      {isDebugMode ? (
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            setIsDebugMode(false);
+            setDebugTime(new Date());
+            setShowScheduleReview(true);
+          }}
+          className="gap-2"
+        >
+          <ArrowLeft size={16} />
+          Back to Schedule
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            initializeAudio();
+            if (!debugDay) setDebugDay(getDayOfWeek(currentTime));
+            setShowScheduleReview(true);
+          }}
+          className="gap-2"
+        >
+          <CalendarBlank size={16} />
+          Schedule
+        </Button>
+      )}
     </div>
-  ) : null;
+  );
 
 
   // ─── Reusable Timer Panel ─────────────────────────────────────────────
@@ -1146,6 +1183,11 @@ function App() {
     </div>
   ) : null;
 
+  // ── SCHEDULE REVIEW ──
+  if (showScheduleReview) {
+    return <ScheduleReview />;
+  }
+
   // ── LATE NIGHT ──
   if (appState === 'late-night') {
     const hoursUntilTomorrow = 24 - timeToUse.getHours() + 6;
@@ -1153,9 +1195,8 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
         {audioUnlockOverlay}
-        <TestModeButton />
+        <ScheduleButton />
         <div className="w-full max-w-4xl space-y-8">
-          {isDebugMode && <DebugControls />}
           <Card className="p-12 text-center">
             <div className="space-y-8">
               <h1 className="text-5xl font-black text-primary">See You Tomorrow! 🌙</h1>
@@ -1185,8 +1226,7 @@ function App() {
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
           {audioUnlockOverlay}
           <div className="max-w-6xl mx-auto space-y-8">
-            <TestModeButton />
-            {isDebugMode && <DebugControls />}
+            <ScheduleButton />
 
             {/* Progress Bar */}
             <Card className="p-6">
@@ -1340,9 +1380,8 @@ function App() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center p-8">
           {audioUnlockOverlay}
-          <TestModeButton />
+          <ScheduleButton />
           <div className="w-full max-w-4xl space-y-8">
-            {isDebugMode && <DebugControls />}
             <Card className="p-12 text-center">
               <div className="space-y-8">
                 <CheckCircle size={120} className="text-accent mx-auto" />
@@ -1367,9 +1406,8 @@ function App() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-8">
           {audioUnlockOverlay}
-          <TestModeButton />
+          <ScheduleButton />
           <div className="w-full max-w-4xl space-y-8">
-            {isDebugMode && <DebugControls />}
             <Card className="p-12 text-center">
               <h1 className="text-5xl font-black text-primary animate-pulse">Starting Evening Routine...</h1>
             </Card>
@@ -1384,9 +1422,8 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center p-8">
         {audioUnlockOverlay}
-        <TestModeButton />
+        <ScheduleButton />
         <div className="w-full max-w-4xl space-y-8">
-          {isDebugMode && <DebugControls />}
           <Card className="p-12 text-center">
             <div className="space-y-8">
               <Sun size={120} className="text-yellow-500 mx-auto" weight="fill" />
@@ -1435,9 +1472,8 @@ function App() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
           {audioUnlockOverlay}
-          <TestModeButton />
+          <ScheduleButton />
           <div className="w-full max-w-4xl space-y-8">
-            {isDebugMode && <DebugControls />}
             <Card className="p-12 text-center">
               <div className="space-y-8">
                 <h1 className="text-6xl font-black text-primary">Happy {dayOfWeek}! 🎉</h1>
@@ -1458,9 +1494,8 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center p-8">
         {audioUnlockOverlay}
-        <TestModeButton />
+        <ScheduleButton />
         <div className="w-full max-w-4xl space-y-8">
-          {isDebugMode && <DebugControls />}
           <Card className="p-12 text-center">
             <div className="space-y-8">
               <h1 className="text-6xl font-black text-primary">Good Morning! 🌅</h1>
@@ -1515,8 +1550,7 @@ function App() {
         <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
           {audioUnlockOverlay}
           <div className="max-w-6xl mx-auto space-y-8">
-            <TestModeButton />
-            {isDebugMode && <DebugControls />}
+            <ScheduleButton />
             {renderTimerPanel({
               routine: DAILY_ROUTINE,
               currentStep: sharedStep,
@@ -1531,7 +1565,6 @@ function App() {
             <div className="flex items-center justify-center gap-4 text-2xl text-muted-foreground">
               <Clock size={32} />
               <span>{timeToUse.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              {isDebugMode && <Badge variant="destructive" className="ml-2">TEST MODE</Badge>}
               <Button
                 size="sm"
                 variant="ghost"
@@ -1586,14 +1619,12 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
         {audioUnlockOverlay}
         <div className={`${isSplitView ? 'max-w-7xl' : 'max-w-6xl'} mx-auto space-y-8`}>
-          <TestModeButton />
-          {isDebugMode && <DebugControls />}
+          <ScheduleButton />
 
           {/* Current time & voice toggle */}
           <div className="flex items-center justify-center gap-4 text-2xl text-muted-foreground">
             <Clock size={32} />
             <span>{timeToUse.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            {isDebugMode && <Badge variant="destructive" className="ml-2">TEST MODE</Badge>}
             <Button
               size="sm"
               variant="ghost"
