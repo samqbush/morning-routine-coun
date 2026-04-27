@@ -120,20 +120,16 @@
     "file": "evening-step-5.mp3"
   },
   "evening.step.6": {
-    "text": "Time for Family Activity!! Fun Time Together. You have 30 minutes.",
+    "text": "Time for Get Ready for Bed!! All Kids Brush Teeth, Potty & Allergy Medicine. You have 20 minutes.",
     "file": "evening-step-6.mp3"
   },
   "evening.step.7": {
-    "text": "Time for Get Ready for Bed!! All Kids Brush Teeth, Potty & Allergy Medicine. You have 20 minutes.",
+    "text": "Time for Story Time!! Read Books Together. You have 20 minutes.",
     "file": "evening-step-7.mp3"
   },
   "evening.step.8": {
-    "text": "Time for Story Time!! Read Books Together. You have 20 minutes.",
-    "file": "evening-step-8.mp3"
-  },
-  "evening.step.9": {
     "text": "Time for Bedtime!! All Kids in Bed — Lights Out!. You have 20 minutes.",
-    "file": "evening-step-9.mp3"
+    "file": "evening-step-8.mp3"
   },
   "evening.complete": {
     "text": "Great job! The evening routine is complete. Now it's Sam and Jill time!",

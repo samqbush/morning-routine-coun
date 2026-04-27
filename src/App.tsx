@@ -547,23 +547,6 @@ function App() {
 
   // ─── Evening Routine Functions ────────────────────────────────────────
 
-  const swapBathAndFamilyActivity = () => {
-    const bathIndex = selectedSteps.findIndex(s => s.id === 'bath');
-    const familyIndex = selectedSteps.findIndex(s => s.id === 'family-activity');
-    if (bathIndex === -1 || familyIndex === -1) return;
-    setSelectedSteps(prev => {
-      const newSteps = [...prev];
-      [newSteps[bathIndex], newSteps[familyIndex]] = [newSteps[familyIndex], newSteps[bathIndex]];
-      return newSteps;
-    });
-    const currentId = selectedSteps[currentEveningStep]?.id;
-    if (currentId === 'bath' || currentId === 'family-activity') {
-      setStepStartTime(Date.now());
-      setIsPaused(false);
-      setPausedTimeRemaining(null);
-    }
-  };
-
   const startEveningRoutine = () => {
     if (selectedSteps.length === 0) return;
     initializeAudio();
@@ -1339,11 +1322,6 @@ function App() {
                     <SkipForward size={32} />
                     Skip
                   </Button>
-                  {selectedSteps.some(s => s.id === 'bath') && selectedSteps.some(s => s.id === 'family-activity') && (
-                    <Button size="lg" variant="outline" onClick={swapBathAndFamilyActivity} className="gap-3 text-2xl px-8 py-6">
-                      🛁 ↔ 👨‍👩‍👧‍👦
-                    </Button>
-                  )}
                   <Button size="lg" variant="destructive" onClick={resetEveningRoutine} className="gap-3 text-2xl px-8 py-6">
                     <ArrowsClockwise size={32} />
                     Restart
