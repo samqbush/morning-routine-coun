@@ -189,14 +189,7 @@
       "icon": "emoji:🛁",
       "iconColor": "text-blue-500"
     },
-    {
-      "id": "family-activity",
-      "activity": "Family Activity!",
-      "description": "Fun Time Together",
-      "durationMinutes": 30,
-      "icon": "emoji:👨‍👩‍👧‍👦",
-      "iconColor": "text-pink-500"
-    },
+
     {
       "id": "bedtime-prep",
       "activity": "Get Ready for Bed!",
@@ -222,5 +215,5 @@
       "iconColor": "text-indigo-500"
     }
   ],
-  "eveningRoutine": ["dinner-prep", "get-drink", "dinner", "cleanup", "outfit", "bath", "family-activity", "bedtime-prep", "story", "all-bed"]
+  "eveningRoutine": ["dinner-prep", "get-drink", "dinner", "cleanup", "outfit", "bath", "bedtime-prep", "story", "all-bed"]
 }
