@@ -291,6 +291,13 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Clean up audio unlock timer on unmount
+  useEffect(() => {
+    return () => {
+      if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+    };
+  }, []);
+
   // Check speech synthesis availability and load audio manifest on mount
   useEffect(() => {
     const checkSpeechAvailability = () => {
@@ -338,6 +345,7 @@ function App() {
   };
 
   // Attempt to unlock audio; if blocked, show the prompt overlay
+  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tryUnlockAudio = () => {
     if (audioUnlocked) return;
     const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -351,10 +359,12 @@ function App() {
         setShowAudioPrompt(true);
       });
       // Also show prompt if still suspended after a short delay
-      setTimeout(() => {
+      if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+      unlockTimerRef.current = setTimeout(() => {
         if (ctx.state === 'suspended') {
           setShowAudioPrompt(true);
         }
+        unlockTimerRef.current = null;
       }, 200);
     } else {
       setAudioUnlocked(true);
@@ -861,9 +871,10 @@ function App() {
                     )}
                     <div className="space-y-2">
                       {group.steps.map((step, si) => (
-                        <div
+                        <button
                           key={`${gi}-${si}`}
-                          className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/10 cursor-pointer transition-colors group"
+                          type="button"
+                          className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/10 cursor-pointer transition-colors group w-full text-left"
                           onClick={() => previewMorningStep(step, selectedDay)}
                         >
                           <Badge variant="outline" className="text-base px-3 py-1 font-mono min-w-[70px] text-center">
@@ -875,7 +886,7 @@ function App() {
                             <div className="text-sm text-muted-foreground">{step.description}</div>
                           </div>
                           <Eye size={20} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -900,9 +911,10 @@ function App() {
               {eveningStepsWithTimes.map(({ step, startTime }, index) => {
                 const startMinutes = EVENING_START_MINUTES + eveningStepsWithTimes.slice(0, index).reduce((sum, s) => sum + s.step.durationMinutes, 0);
                 return (
-                  <div
+                  <button
                     key={step.id}
-                    className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/10 cursor-pointer transition-colors group"
+                    type="button"
+                    className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/10 cursor-pointer transition-colors group w-full text-left"
                     onClick={() => previewEveningTime(startMinutes, selectedDay)}
                   >
                     <Badge variant="outline" className="text-base px-3 py-1 font-mono min-w-[70px] text-center">
@@ -915,7 +927,7 @@ function App() {
                     </div>
                     <Badge variant="secondary" className="text-xs">{step.durationMinutes}min</Badge>
                     <Eye size={20} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -1159,11 +1171,16 @@ function App() {
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={handleAudioUnlock}
-      onKeyDown={handleAudioUnlock}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          handleAudioUnlock();
+        }
+      }}
     >
       <button
         autoFocus
-        onClick={handleAudioUnlock}
+        onClick={(e) => { e.stopPropagation(); handleAudioUnlock(); }}
         className="flex flex-col items-center gap-6 rounded-3xl bg-white/95 px-16 py-12 shadow-2xl focus:outline-none focus:ring-4 focus:ring-primary"
       >
         <SpeakerHigh size={80} className="text-primary" />
@@ -1175,7 +1192,12 @@ function App() {
 
   // ── SCHEDULE REVIEW ──
   if (showScheduleReview) {
-    return <ScheduleReview />;
+    return (
+      <>
+        {audioUnlockOverlay}
+        <ScheduleReview />
+      </>
+    );
   }
 
   // ── LATE NIGHT ──

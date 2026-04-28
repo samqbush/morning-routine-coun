@@ -1,4 +1,8 @@
-const manifest = require('./public/audio/manifest.json');
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const manifestUrl = new URL('./public/audio/manifest.json', import.meta.url);
+const manifest = JSON.parse(readFileSync(fileURLToPath(manifestUrl), 'utf8'));
 
 function testPlayAudioByKeys(keys) {
   let index = 0;
