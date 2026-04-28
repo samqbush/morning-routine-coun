@@ -772,7 +772,7 @@ function App() {
   };
 
   /** Get evening steps with computed start times for display */
-  const getEveningStepsWithTimes = (): { step: EveningStep; startTime: string }[] => {
+  const getEveningStepsWithTimes = (): { step: EveningStep; startTime: string; startMinutes: number }[] => {
     if (!loadedRoutines) return [];
     const orderedSteps = loadedRoutines.eveningRoutine
       .map(id => loadedRoutines!.eveningSteps.find(s => s.id === id))
@@ -780,11 +780,12 @@ function App() {
 
     let runningMinutes = EVENING_START_MINUTES;
     return orderedSteps.map(step => {
+      const startMinutes = runningMinutes;
       const hours = Math.floor(runningMinutes / 60);
       const mins = runningMinutes % 60;
       const startTime = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
       runningMinutes += step.durationMinutes;
-      return { step, startTime };
+      return { step, startTime, startMinutes };
     });
   };
 
@@ -908,8 +909,7 @@ function App() {
               Starts at 5:00 PM · Times are estimated based on step durations
             </p>
             <div className="space-y-2">
-              {eveningStepsWithTimes.map(({ step, startTime }, index) => {
-                const startMinutes = EVENING_START_MINUTES + eveningStepsWithTimes.slice(0, index).reduce((sum, s) => sum + s.step.durationMinutes, 0);
+              {eveningStepsWithTimes.map(({ step, startTime, startMinutes }) => {
                 return (
                   <button
                     key={step.id}
