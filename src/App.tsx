@@ -10,12 +10,42 @@ type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'S
 type MorningPlan = 'dual' | 'shared' | 'none';
 type MorningView = 'jack-only' | 'split' | 'twins-only' | 'shared';
 type AppState = 'late-night' | 'before-start' | 'morning-active' | 'morning-complete';
+type EveningSchedulePosition =
+  | { status: 'before' }
+  | { status: 'active'; stepIndex: number; elapsedSeconds: number }
+  | { status: 'complete' };
 
 // Evening routine won't auto-start until this time (5:00 PM)
 const EVENING_START_MINUTES = 17 * 60;
 
 // Minutes after last step before routine is considered "done"
 const LAST_STEP_WINDOW = 5;
+
+const getDateKey = (date: Date): string =>
+  `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+const getEveningSchedulePosition = (
+  steps: EveningStep[],
+  timeInSeconds: number,
+): EveningSchedulePosition => {
+  let stepStartSeconds = EVENING_START_MINUTES * 60;
+
+  if (timeInSeconds < stepStartSeconds) return { status: 'before' };
+
+  for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+    const stepEndSeconds = stepStartSeconds + steps[stepIndex].durationMinutes * 60;
+    if (timeInSeconds < stepEndSeconds) {
+      return {
+        status: 'active',
+        stepIndex,
+        elapsedSeconds: timeInSeconds - stepStartSeconds,
+      };
+    }
+    stepStartSeconds = stepEndSeconds;
+  }
+
+  return { status: 'complete' };
+};
 
 // Load routines from config at app startup
 let loadedRoutines: ReturnType<typeof loadRoutines> | null = null;
@@ -51,6 +81,7 @@ function App() {
   const [stepStartTime, setStepStartTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [pausedTimeRemaining, setPausedTimeRemaining] = useState<number | null>(null);
+  const eveningDateRef = useRef(getDateKey(new Date()));
 
   // Show error screen if config failed to load
   if (routinesError) {
@@ -557,16 +588,16 @@ function App() {
 
   // ─── Evening Routine Functions ────────────────────────────────────────
 
-  const startEveningRoutine = () => {
+  const startEveningRoutine = (stepIndex = 0, elapsedSeconds = 0) => {
     if (selectedSteps.length === 0) return;
     initializeAudio();
     setEveningMode('active');
-    setCurrentEveningStep(0);
-    setStepStartTime(Date.now());
+    setCurrentEveningStep(stepIndex);
+    setStepStartTime(Date.now() - elapsedSeconds * 1000);
     setIsPaused(false);
     setPausedTimeRemaining(null);
     playStepChangeSound();
-    announceEveningActivity(selectedSteps[0]);
+    announceEveningActivity(selectedSteps[stepIndex]);
   };
 
   const resetEveningRoutine = () => {
@@ -579,6 +610,14 @@ function App() {
       playStepChangeSound();
       announceEveningActivity(selectedSteps[0]);
     }
+  };
+
+  const clearEveningRoutine = () => {
+    setEveningMode('idle');
+    setCurrentEveningStep(0);
+    setStepStartTime(null);
+    setIsPaused(false);
+    setPausedTimeRemaining(null);
   };
 
   const skipEveningStep = () => advanceEveningStep();
@@ -598,15 +637,28 @@ function App() {
     }
   };
 
-  const advanceEveningStep = () => {
-    const nextStep = currentEveningStep + 1;
+  const advanceEveningStep = (preserveElapsedTime = false) => {
+    let nextStep = currentEveningStep + 1;
+    let nextStepStartTime = preserveElapsedTime && stepStartTime !== null
+      ? stepStartTime + selectedSteps[currentEveningStep].durationMinutes * 60 * 1000
+      : Date.now();
+
+    while (
+      preserveElapsedTime &&
+      nextStep < selectedSteps.length &&
+      Date.now() >= nextStepStartTime + selectedSteps[nextStep].durationMinutes * 60 * 1000
+    ) {
+      nextStepStartTime += selectedSteps[nextStep].durationMinutes * 60 * 1000;
+      nextStep++;
+    }
+
     if (nextStep >= selectedSteps.length) {
       setEveningMode('complete');
       playStepChangeSound();
       announceEveningActivity(null, true);
     } else {
       setCurrentEveningStep(nextStep);
-      setStepStartTime(Date.now());
+      setStepStartTime(nextStepStartTime);
       setIsPaused(false);
       setPausedTimeRemaining(null);
       playStepChangeSound();
@@ -643,7 +695,7 @@ function App() {
   useEffect(() => {
     if (eveningMode !== 'active' || isPaused) return;
     const interval = setInterval(() => {
-      if (getEveningTimeRemaining() <= 0) advanceEveningStep();
+      if (getEveningTimeRemaining() <= 0) advanceEveningStep(true);
     }, 500);
     return () => clearInterval(interval);
   }, [eveningMode, isPaused, currentEveningStep, stepStartTime, selectedSteps]);
@@ -715,25 +767,24 @@ function App() {
     }
   }, [currentTime, debugTime, morningPlan]);
 
-  // Reset evening routine to idle at the start of a new morning so it can auto-start that evening
+  // Clear the previous day's evening state even if the app was asleep at midnight.
   useEffect(() => {
-    if ((appState === 'before-start' || appState === 'morning-active') && eveningMode === 'complete') {
-      setEveningMode('idle');
-    }
-  }, [appState, eveningMode]);
+    const dateKey = getDateKey(currentTime);
+    if (dateKey === eveningDateRef.current) return;
 
-  // Auto-start evening routine when morning is truly complete (only after 5 PM)
+    eveningDateRef.current = dateKey;
+    clearEveningRoutine();
+  }, [currentTime]);
+
+  // Join the clock-based evening schedule, including after a reload or TV wake.
   useEffect(() => {
-    const timeInMinutes = getCurrentTimeInMinutes();
-    if (appState === 'morning-complete' && eveningMode === 'idle' && selectedSteps.length > 0 && timeInMinutes >= EVENING_START_MINUTES) {
-      initializeAudio();
-      setEveningMode('active');
-      setCurrentEveningStep(0);
-      setStepStartTime(Date.now());
-      setIsPaused(false);
-      setPausedTimeRemaining(null);
-      playStepChangeSound();
-      announceEveningActivity(selectedSteps[0]);
+    if (appState !== 'morning-complete' || eveningMode !== 'idle' || selectedSteps.length === 0) return;
+
+    const position = getEveningSchedulePosition(selectedSteps, getCurrentTimeInSeconds());
+    if (position.status === 'active') {
+      startEveningRoutine(position.stepIndex, position.elapsedSeconds);
+    } else if (position.status === 'complete') {
+      setEveningMode('complete');
     }
   }, [appState, eveningMode, selectedSteps.length, currentTime]);
 
@@ -792,6 +843,7 @@ function App() {
   /** Preview a morning step from the schedule review */
   const previewMorningStep = (step: RoutineStep, day: DayOfWeek) => {
     initializeAudio();
+    clearEveningRoutine();
     setDebugDay(day);
     setDebugTimeFromMinutes(step.timeInMinutes);
     setIsDebugMode(true);
@@ -801,6 +853,7 @@ function App() {
   /** Preview an evening time from the schedule review */
   const previewEveningTime = (startTimeMinutes: number, day: DayOfWeek) => {
     initializeAudio();
+    clearEveningRoutine();
     setDebugDay(day);
     setDebugTimeFromMinutes(startTimeMinutes);
     setIsDebugMode(true);
@@ -973,6 +1026,7 @@ function App() {
           onClick={() => {
             setIsDebugMode(false);
             setDebugTime(new Date());
+            clearEveningRoutine();
             setShowScheduleReview(true);
           }}
           className="gap-2"
@@ -1443,7 +1497,7 @@ function App() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={startEveningRoutine}
+                onClick={() => startEveningRoutine()}
                 className="text-2xl px-8 py-6 mt-4"
               >
                 Start Evening Early
